@@ -1,0 +1,155 @@
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Coins } from "lucide-react"
+import type React from "react"
+import { useEffect, useState, type FormEvent } from "react"
+import { Spinner } from "./ui/spinner"
+import { Textarea } from "./ui/textarea"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
+import type { Payment } from "./payment-table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+
+export type IssueReceiptData = {
+    description?: string
+    recipientName?: string
+    recipientAddress?: string
+    paymentId?: string
+    mintableTokens: number
+}
+
+type Props = {
+    buttonText?: string
+    amount?: number
+    description?: string
+    paymentId?: string,
+    paymentRequests: Payment[],
+    onSubmit: (data: IssueReceiptData) => Promise<void>
+    buttonVariant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost"
+}
+
+export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, buttonText = 'New receipt', buttonVariant = 'default', amount, description, paymentId }) => {
+    const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const [_amount, setAmount] = useState(amount || 0)
+    const [_description, setDescription] = useState(description || "")
+    const [recipientName, _setRecipientName] = useState("")
+    const [recipientAddress, _setRecipientAddress] = useState("")
+    const [mintableTokens, setMintableTokens] = useState(0)
+    const [_paymentId, setPaymentId] = useState(paymentId || undefined)
+
+    useEffect(() => {
+        if (_amount > 0) {
+            setMintableTokens(Math.floor(_amount))
+        }
+    }, [_amount])
+
+    const handleChangeAmount = (val: string) => {
+        const amount = parseFloat(val)
+        if (Number.isNaN(amount)) {
+            setAmount(0)
+            setMintableTokens(0)
+            return
+        }
+        setAmount(amount)
+    }
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+        await onSubmit({
+            mintableTokens,
+            description: _description,
+            recipientName,
+            recipientAddress,
+            paymentId: _paymentId
+        })
+        setLoading(false)
+        setOpen(false)
+    }
+
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild onClick={() => setOpen(true)} >
+                <Button className="w-full lg:w-auto" variant={buttonVariant || 'default'}>{buttonText}</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden bg-gray-50 overflow-y-auto">
+                <DialogHeader className="">
+                    <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2"><Coins className="text-primary" />Issue receipt</DialogTitle>
+                    <DialogDescription className="flex flex-col gap-2">
+                        Create a receipt for a paid work -- redeemable loyalty token to engage your customer.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={(e) => handleSubmit(e)}>
+                    <div className="flex flex-col gap-4 my-4">
+                        <Card className="grid gap-3">
+                            <CardHeader>
+                                <CardTitle className="font-semibold text-black">Receipt Value</CardTitle>
+                                <CardDescription className="text-xs">Represents completed work. Redeemable according to your terms for discounting.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Input required id="amount" type='number' min='0' placeholder='0' onChange={(e) => handleChangeAmount(e.target.value)} value={_amount} />
+                            </CardContent>
+                            <CardFooter className="flex justify-between">
+                                <span className="text-right text-xs text-gray-400">{_amount} $ </span>
+                                <span className="text-right text-xs text-gray-400">{mintableTokens} mintable tokens </span>
+                            </CardFooter>
+                        </Card>
+                        <Card className="grid gap-3">
+                            <CardHeader>
+                                <CardTitle className="font-semibold text-black">Project Description</CardTitle>
+                                <CardDescription className="text-xs">Describe the work that was completed. This creates a clear, auditable record tied to the issued receipt.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-2">
+                                <Textarea id="description" onChange={(e) => setDescription(e.target.value)} placeholder="Frontend delivery for Project Alpha" value={_description} />
+                            </CardContent>
+                        </Card>
+                        {/* <Card className="grid gap-3">
+                            <CardHeader>
+                                <CardTitle className="font-semibold text-black">Recipient</CardTitle>
+                                <CardDescription className="text-xs">Who should receive this receipt?</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-2">
+                                <Input id="client" type="text" placeholder="Name" onChange={(e) => setRecipientName(e.target.value)} value={recipientName} />
+                                <Input id="address" type="text" placeholder="Spark Wallet address" onChange={(e) => setRecipientAddress(e.target.value)} value={recipientAddress} />
+                            </CardContent>
+                        </Card> */}
+                        <Card className="grid gap-3">
+                            <CardHeader>
+                                <CardTitle className="font-semibold text-black">Payment</CardTitle>
+                                <CardDescription className="text-xs">Can we associate a payment to this receipt?</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-2">
+                                <Select onValueChange={setPaymentId} value={paymentId}>
+                                    <SelectTrigger className="w-full"><SelectValue placeholder="Select a payment request" /></SelectTrigger>
+                                    <SelectContent>
+                                        {paymentRequests.map((p, i) => (
+                                            <SelectItem key={i} value={p.id}>{new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(p.amount)} on {p.created_at.toLocaleDateString()}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={loading} > {loading && <Spinner />} Issue Receipt</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
