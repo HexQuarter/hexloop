@@ -258,8 +258,8 @@ export const LandingPage = () => {
                 <div className='flex lg:flex-row flex-col items-center gap-10'>
                   <div className='flex flex-col gap-5 lg:w-1/2'>
                     <p className='text-5xl font-bold'><span className='text-primary'>~$1</span> in sats</p>
-                    <p className='text-xl'>Per checkout activation</p>
-                    <p className='text-slate-500 text-center'>Provide a checkout page that allows clients to use redeemable tokens for discounts.</p>
+                    <p className='text-2xl'>Per checkout activation</p>
+                    <p className='text-slate-600'>Provide a checkout page that allows clients to use redeemable tokens for discounts.</p>
                   </div>
                   <img src={ScreenPayment} className='shadow-xl rounded-lg w-100' />
                 </div>
