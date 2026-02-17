@@ -42,7 +42,7 @@ export const LandingPage = () => {
             </div>
           </div>
           <div className='flex flex-col gap-2 lg:flex-row'>
-            <Button onClick={() => navigate('/app')} className='p-6'>Create your first receipt</Button>
+            <Button onClick={() => navigate('/app')} className='p-6'>Create your first receipt <ArrowRight /></Button>
           </div>
         </div>
         <div className='flex flex-col gap-30 px-5 lg:px-30 py-10 lg:py-20 border-t border-primary/10 bg-slate-50'>
@@ -61,8 +61,8 @@ export const LandingPage = () => {
               <div className='flex flex-col gap-5 lg:gap-18 w-full'>
                 <p className='flex text-4xl gap-2 font-semibold text-slate-600'>How this is different ?</p>
                 <div className='flex flex-col gap-5'>
-                  <p className='text-2xl font-semibold'>Tokens are minted only when <span className='text-primary'>real work is delivered and paid.</span></p>
-                  <p className='text-2xl'>Their value comes from <span className='text-primary font-semibold'>trust</span>, not hype.</p>
+                  <p className='text-2xl font-semibold bg-white p-5 shadow-lg rounded-lg'>Tokens are minted only when <span className='text-primary'>real work is delivered and paid.</span></p>
+                  <p className='text-2xl font-semibold bg-white p-5 shadow-lg rounded-lg'>Their value comes from <span className='text-primary font-semibold'>trust</span>, not hype.</p>
                 </div>
               </div>
             </div>
@@ -197,19 +197,19 @@ export const LandingPage = () => {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/20 text-primary">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
-                  <h3 className="font-display text-slate-600 mt-6 text-xl">Proof that work was completed</h3>
+                  <h3 className="font-display text-slate-600 text-xl">Proof that work was completed</h3>
                 </div>
                 <div className='flex gap-5 bg-primary/5 border-1 border-primary/10 p-5 rounded-lg font-semibold items-center'>
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/20 text-primary">
                     <Shield className="h-8 w-8" />
                   </div>
-                  <h3 className="font-display text-slate-600 mt-6 text-xl">Proof that value was delivered</h3>
+                  <h3 className="font-display text-slate-600 text-xl">Proof that value was delivered</h3>
                 </div>
                 <div className='flex gap-5 bg-primary/5 border-1 border-primary/10 p-5 rounded-lg font-semibold items-center'>
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/20 text-primary">
                     <Workflow className="h-8 w-8" />
                   </div>
-                  <h3 className="font-display text-slate-600 mt-6 text-xl">Proof that trust was earned</h3>
+                  <h3 className="font-display text-slate-600 text-xl">Proof that trust was earned</h3>
                 </div>
               </div>
               <p className='mt-10 text-2xl text-center'>This is <span className='text-primary font-semibold'>Operational Real-World Assets (oRWA)</span> — <br />grounded in real business activity.</p>
