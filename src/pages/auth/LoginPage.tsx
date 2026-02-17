@@ -62,10 +62,6 @@ export const LoginPage = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    <p className="text-sm px-6 text-center text-slate-500">
-                        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-                        and <a href="#">Privacy Policy</a>.
-                    </p>
                 </div>
             </div>
         </div >
