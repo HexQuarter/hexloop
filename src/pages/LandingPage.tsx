@@ -1,4 +1,4 @@
-import { ArrowRight, Bitcoin, CheckCircle2, Coins, Handshake, Lock, ReceiptText, Shield, Sparkles, TrendingUp, Workflow } from 'lucide-react'
+import { ArrowRight, Bitcoin, CheckCircle2, Coins, Handshake, Lock, Pickaxe, ReceiptText, Shield, ShieldCheck, Sparkles, TrendingUp, Workflow } from 'lucide-react'
 import { Badge } from '../components/ui/badge.tsx'
 import { Button } from '../components/ui/button.tsx'
 import { Logo } from '../components/logo.tsx'
@@ -22,15 +22,15 @@ export const LandingPage = () => {
           </div>
         </div>
       </header>
-      <div className='flex flex-col '>
-        <div className='flex flex-col gap-10 px-5 lg:px-30 py-20 lg:py-20 bg-primary/5'>
+      <div className='flex flex-col'>
+        <div className='flex flex-col gap-10 px-5 lg:px-30 py-20 lg:py-40 bg-primary/5'>
           <div>
             <Badge className='gap-2 bg-primary/10 text-primary text-sm px-4 py-2 border-primary/20 rounded-full font-light font-medium'>
               <Sparkles className="h-4 w-4" />
               <span>Built on Bitcoin</span>
             </Badge>
           </div>
-          <div className='font-semibold lg:w-1/2'>
+          <div className='font-semibold'>
             <h1 className='text-7xl text-slate-900'><span className='text-primary'>Tokenize</span> completed work.</h1>
             <h2 className='text-5xl'>Build <span className='text-primary'>repeat business.</span></h2>
           </div>
@@ -45,29 +45,48 @@ export const LandingPage = () => {
             <Button onClick={() => navigate('/app')} className='p-6'>Create your first receipt <ArrowRight /></Button>
           </div>
         </div>
-        <div className='flex flex-col gap-30 px-5 lg:px-30 py-10 lg:py-20 border-t border-primary/10 bg-slate-50'>
-          <div className='flex flex-col gap-5 pb-10 pt-10'>
-            <div className='flex lg:flex-row flex-col gap-20 '>
-              <div className='flex flex-col gap-10 w-full '>
-                <p className='text-4xl font-semibold text-slate-600'>Most loyalty systems reward spending.</p>
-                <div className='flex flex-col gap-10'>
-                  <div className='flex flex-col gap-1 text-xl text-slate-500'>
-                    <p>Traditional loyalty platforms issue points disconnected from real value.</p>
-                    <p>Crypto loyalty often turns into speculation.</p>
+        <div className='flex'>
+          <div className='flex flex-col gap-30 px-5 lg:px-30 py-10 lg:py-20 border-t border-primary/10 bg-slate-50 w-full'>
+            <div className='flex flex-col gap-5 pb-10 pt-10'>
+              <div className='flex lg:flex-row flex-col gap-20 '>
+                <div className='flex flex-col gap-10 w-full '>
+                  <div className='flex flex-col gap-2'>
+                    <div className='bg-primary/80 w-1/12 h-1'></div>
+                    <p className='text-4xl font-semibold text-slate-600'>Most loyalty systems reward spending.</p>
                   </div>
-                  <p className='text-3xl font-bold text-primary'>Work deserves better.</p>
+                  <div className='flex flex-col gap-10'>
+                    <div className='flex flex-col gap-1 text-xl text-slate-500'>
+                      <p>Traditional loyalty platforms issue points disconnected from real value.</p>
+                      <p>Crypto loyalty often turns into speculation.</p>
+                    </div>
+                    <p className='text-3xl font-bold text-primary'>Work deserves better.</p>
+                  </div>
                 </div>
-              </div>
-              <div className='flex flex-col gap-5 lg:gap-18 w-full'>
-                <p className='flex text-4xl gap-2 font-semibold text-slate-600'>How this is different ?</p>
-                <div className='flex flex-col gap-5'>
-                  <p className='text-2xl font-semibold bg-white p-5 shadow-lg rounded-lg'>Tokens are minted only when <span className='text-primary'>real work is delivered and paid.</span></p>
-                  <p className='text-2xl font-semibold bg-white p-5 shadow-lg rounded-lg'>Their value comes from <span className='text-primary font-semibold'>trust</span>, not hype.</p>
+                <div className='flex flex-col gap-5 lg:gap-18 w-full'>
+                  <div className='flex flex-col gap-2'>
+                    <div className='bg-primary/80 w-1/12 h-1'></div>
+                    <p className='flex text-4xl gap-2 font-semibold text-slate-600'>How this is different ?</p>
+                  </div>
+                  <div className='flex flex-col gap-10 lg:gap-5 '>
+                    <div className='text-2xl shadow-lg border-primary/40 p-5 rounded-lg flex gap-5 items-center text-black'>
+                      <div className='p-5 rounded'><Pickaxe className='text-primary' /></div>
+                      <div className='flex flex-col'>
+                        <p className='font-semibold'>Tokens minted <span className='text-primary '>on real work</span></p>
+                        <p className='text-sm'>Only when work is delivered and payment confirmed.</p>
+                      </div>
+                    </div>
+                    <div className='text-2xl shadow-lg border-primary/40 p-5 rounded-lg flex gap-5 items-center bg-primary/80 text-slate-800'>
+                      <div className='p-5 rounded'><ShieldCheck className='text-white' /></div>
+                      <div className='flex flex-col'>
+                        <p className='font-semibold'>Value from <span className='text-white '>trust</span>, not hype</p>
+                        <p className='text-sm'>Anchored to Bitcoin's network. Backed by real business activity.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          {/* <div className='flex flex-col lg:flex-row gap-10 justify-between'>
+            {/* <div className='flex flex-col lg:flex-row gap-10 justify-between'>
             <div className="border-b pb-10 lg:border-r lg:border-b-0 lg:pb-0 border-primary/20">
               <div className="">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/20 text-primary">
@@ -103,6 +122,7 @@ export const LandingPage = () => {
             </div>
           </div> */}
 
+          </div>
         </div>
 
         <div className='flex flex-col justify-between gap-20 lg:gap-30 px-5 lg:px-30 py-15 lg:py-30 relative border-t border-primary/10'>
@@ -293,6 +313,6 @@ export const LandingPage = () => {
           </p>
         </div>
       </div >
-    </div>
+    </div >
   )
 }
