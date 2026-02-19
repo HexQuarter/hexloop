@@ -46,7 +46,7 @@ export const WalletCard: React.FC<Props> = ({ btcBalance, tokens, tokenMetadata,
     const currencyFormat = new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: currency });
 
     return (
-        <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-full">
+        <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-1/4">
             <CardHeader className="flex flex-col gap-5 ">
                 <CardTitle className="text-2xl text-slate-700">Wallet</CardTitle>
                 <CardDescription>

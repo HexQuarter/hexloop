@@ -1,5 +1,4 @@
 import React from "react"
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { ExternalLink } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./ui/chart"
@@ -30,14 +29,8 @@ export type IssuanceStats = {
 
 export const TokenCard: React.FC<Props> = ({ tokenMetadata, issuanceStats, network }) => {
     return (
-        <Card className="flex flex-col border-primary/20 rounded-sm lg:w-150">
-            <CardHeader className="flex flex-col">
-                <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                    <p className="text-2xl text-slate-700">Receipt Program </p>
-                </CardTitle>
-                <CardDescription>Represents paid work that can be redeemed for future discounts</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2 text-sm">
+        <div className="flex flex-col">
+            <div className="flex flex-col gap-2 text-sm">
                 <p>Name: {tokenMetadata.name}</p>
                 <p>Unit: {tokenMetadata.symbol}</p>
 
@@ -55,17 +48,17 @@ export const TokenCard: React.FC<Props> = ({ tokenMetadata, issuanceStats, netwo
                         <ChartTooltip content={<ChartTooltipContent />} />
                     </AreaChart>
                 </ChartContainer>
-            </CardContent>
-            <CardFooter>
-                <CardAction>
+            </div>
+            <div>
+                <div>
                     <Button
                         className="w-full xl:w-auto"
                         variant="link" onClick={() => window.open(`https://sparkscan.io/token/${tokenMetadata.identifier}?network=${network}`, '_blank')}>
                         <ExternalLink />
                         View more details on explorer
                     </Button>
-                </CardAction>
-            </CardFooter>
-        </Card>
+                </div>
+            </div>
+        </div>
     )
 }

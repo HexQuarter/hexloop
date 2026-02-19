@@ -7,7 +7,6 @@ import { toast } from "sonner"
 
 import { WalletCard } from "@/components/wallet-card"
 import { TokenCard, type IssuanceStats } from "@/components/token-card"
-import { Spinner } from "@/components/ui/spinner"
 import { IssueReceiptForm, type IssueReceiptData } from "@/components/issue-receipt"
 import { PaymentRequestForm, type PaymentRequestData } from "@/components/payment-request"
 import { ReceiptTable, type Receipt } from "@/components/receipt-table"
@@ -17,6 +16,7 @@ import { PaymentTable, type Payment } from "@/components/payment-table"
 import type { Asset } from "@/components/send"
 import { send } from "@/lib/utils"
 import type { ReceiptMetadataData } from "@/components/receipt-metadata-form"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export const DashboardPage = () => {
     const { wallet } = useWallet()
@@ -359,39 +359,101 @@ export const DashboardPage = () => {
                                     </div>
                                 </>
                             }
-                            {initializing && <Spinner />}
-                            {!initializing && tokenMetadata &&
-                                <div className="flex flex-col gap-5">
-                                    <h2 className="text-2xl font-light text-slate-500">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
-                                    <div className="flex lg:flex-row flex-col gap-5">
-                                        <TokenCard tokenMetadata={tokenMetadata} issuanceStats={issuanceStats} network={wallet?.getNetwork() as string} />
-                                        <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-full lg:col-span-1 2xl:col-span-2">
-                                            <CardHeader className="flex flex-col">
+
+                            <div className="flex flex-col gap-5">
+                                <h2 className="text-2xl font-light text-slate-500">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
+                                <div className="flex lg:flex-row flex-col gap-5">
+                                    <Card className="lg:w-1/4">
+                                        <CardHeader>
+                                            <CardHeader className="flex flex-col p-0">
                                                 <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                                    <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-2">
-                                                        <p className="text-2xl text-slate-700">Receipts</p>
-                                                        <CardAction className='w-full lg:w-auto'>
-                                                            <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />
-                                                        </CardAction>
-                                                    </div>
+                                                    <p className="text-2xl text-slate-700">Receipt Program </p>
                                                 </CardTitle>
-                                                <CardDescription>Receipts issued for completed and paid work</CardDescription>
+                                                <CardDescription>Represents paid work that can be redeemed for future discounts</CardDescription>
                                             </CardHeader>
-                                            <CardContent>
+                                        </CardHeader>
+                                        <CardContent className="">
+                                            {initializing &&
+                                                <>
+                                                    <Skeleton className="h-4 w-full mb-4" />
+                                                    <Skeleton className="h-4 w-full mb-4" />
+                                                    <Skeleton className="h-4 w-3/4 mt-10 mb-4" />
+                                                    <Skeleton className="aspect-video w-full h-20" />
+                                                    <Skeleton className="h-4 w-full mt-4" />
+                                                </>
+                                            }
+                                            {!initializing && tokenMetadata &&
+                                                <TokenCard tokenMetadata={tokenMetadata} issuanceStats={issuanceStats} network={wallet?.getNetwork() as string} />
+                                            }
+                                        </CardContent>
+                                    </Card>
+                                    <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-3/4 lg:col-span-1 2xl:col-span-2">
+                                        <CardHeader className="flex flex-col">
+                                            <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
+                                                <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-2">
+                                                    <p className="text-2xl text-slate-700">Receipts</p>
+                                                    <CardAction>
+                                                        {initializing && <Skeleton className="h-10 w-30" />}
+                                                        {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
+                                                    </CardAction>
+                                                </div>
+                                            </CardTitle>
+                                            <CardDescription>Receipts issued for completed and paid work</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {initializing &&
+                                                <div className="flex w-full flex-col gap-2">
+                                                    {Array.from({ length: 5 }).map((_, index) => (
+                                                        <div className="flex gap-4" key={index}>
+                                                            <Skeleton className="h-10 flex-1" />
+                                                            <Skeleton className="h-10 flex-1" />
+                                                            <Skeleton className="h-10 flex-1" />
+                                                            <Skeleton className="h-10 flex-1" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            }
+                                            {!initializing &&
                                                 <ReceiptTable
                                                     network={wallet?.getNetwork() as string}
                                                     receipts={receipts}
                                                     paymentRequests={paymentRequests}
                                                     onMetadataChange={handleReceiptMetadataChange} />
-                                            </CardContent>
-                                        </Card>
-                                    </div>
+                                            }
+                                        </CardContent>
+                                    </Card>
                                 </div>
-                            }
+                            </div>
                         </header>
 
-                        <div className="flex flex-col lg:grid 2xl:grid-cols-5 lg:grid-cols-3 gap-5 px-5 lg:px-10">
-                            {wallet && addresses && <WalletCard
+                        <div className="flex lg:flex-row flex-col gap-5 px-5 lg:px-10">
+                            {initializing &&
+                                <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-1/4">
+                                    <CardHeader className="flex flex-col gap-5">
+                                        <CardTitle className="text-2xl text-slate-700">Wallet</CardTitle>
+                                        <CardDescription className="w-full">
+                                            <div className="flex flex-col gap-2">
+                                                <Skeleton className="h-7 w-20" />
+                                                <Skeleton className="h-4 w-30" />
+                                            </div>
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col gap-5">
+                                        <div className="flex gap-2">
+                                            <Skeleton className="h-9 w-20" />
+                                            <Skeleton className="h-9 w-20" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Skeleton className="h-5 w-20" />
+                                            <Skeleton className="h-5 w-20" />
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <Skeleton className="h-15 w-full" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            }
+                            {!initializing && wallet && addresses && <WalletCard
                                 addresses={addresses}
                                 btcBalance={Number(btcBalance) / (10 ** 8)}
                                 tokens={tokensData}
@@ -402,21 +464,35 @@ export const DashboardPage = () => {
                                 payments={walletHistory}
                                 wallet={wallet} />}
 
-                            {tokenMetadata &&
-                                <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-full lg:col-span-2 2xl:col-span-4">
-                                    <CardHeader className="flex flex-col">
-                                        <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                            <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
-                                                <p className="text-2xl border-primary/40 flex gap-2 font-bold text-slate-700">Payment requests</p>
-                                                <CardAction className='w-full lg:w-auto'>
-                                                    <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
-                                                </CardAction>
-                                            </div>
+                            <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-3/4 lg:col-span-2 2xl:col-span-4">
+                                <CardHeader className="flex flex-col">
+                                    <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
+                                        <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
+                                            <p className="text-2xl border-primary/40 flex gap-2 font-bold text-slate-700">Payment requests</p>
+                                            {initializing && <Skeleton className="h-10 w-40" />}
+                                            {!initializing && <CardAction className='w-full lg:w-auto'>
+                                                <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
+                                            </CardAction>}
+                                        </div>
 
-                                        </CardTitle>
-                                        <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
+                                    </CardTitle>
+                                    <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {initializing &&
+                                        <div className="flex w-full flex-col gap-2">
+                                            {Array.from({ length: 5 }).map((_, index) => (
+                                                <div className="flex gap-4" key={index}>
+                                                    <Skeleton className="h-10 w-2/8" />
+                                                    <Skeleton className="h-10 w-1/8" />
+                                                    <Skeleton className="h-10 w-2/8" />
+                                                    <Skeleton className="h-10 w-1/8" />
+                                                    <Skeleton className="h-10 w-1/8" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    }
+                                    {!initializing &&
                                         <PaymentTable
                                             data={paymentRequests.map(r => ({
                                                 created_at: r.created_at,
@@ -435,10 +511,9 @@ export const DashboardPage = () => {
                                             onClaim={handleClaimPaymentRequest}
                                             onDeriveReceipt={handleIssueReceipt}
                                             paymentRequests={paymentRequests}
-                                            receipts={receipts} />
-                                    </CardContent>
-                                </Card>
-                            }
+                                            receipts={receipts} />}
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>

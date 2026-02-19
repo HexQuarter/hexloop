@@ -2,12 +2,12 @@ import { type ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "./ui/data-table"
 import React, { useState } from "react"
-import { CircleMinus, ExternalLink } from "lucide-react"
+import { CircleMinus, ExternalLink, MoreHorizontal } from "lucide-react"
 import { Button } from "./ui/button"
-import { shortenAddress } from "@/lib/utils"
 import { Spinner } from "./ui/spinner"
 import { IssueReceiptForm, type IssueReceiptData } from "./issue-receipt"
 import type { Receipt } from "./receipt-table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 
 export type Payment = {
     created_at: Date
@@ -35,7 +35,19 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
         },
         {
             accessorKey: "amount",
-            header: "Amount"
+            header: "Amount",
+            cell: ({ row }) => {
+                return (
+                    <div className="flex gap-1">
+                        <span className={row.original.redeem_tx ? 'line-through' : ''}>
+                            {Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(row.original.amount)}
+                        </span>
+                        {row.original.redeem_amount && <span>
+                            {Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(row.original.amount - row.original.redeem_amount)}
+                        </span>}
+                    </div>
+                )
+            }
         },
         {
             accessorKey: "description",
@@ -57,56 +69,11 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
-                const settle_tx: string | null = row.getValue("settle_tx")
+                const settle_tx: string | undefined = row.original.settle_tx
                 if (settle_tx) {
                     return <span className="text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>
                 }
                 return <span className="text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>
-            }
-        },
-        {
-            accessorKey: "redeem_amount",
-            header: "Redeemed amount",
-            cell: ({ row }) => {
-                const redeeemAmount: number | null = row.getValue("redeem_amount")
-                if (redeeemAmount) {
-                    const redeemTx = row.original.redeem_tx
-                    return (
-                        <div>
-                            <span>{redeeemAmount}</span>
-                            <Button variant="link" size="sm" popoverTarget="" onClick={() => window.open(`https://sparkscan.io/tx/${redeemTx}`, '_blank')}>See transaction<ExternalLink /></Button>
-                        </div>
-                    )
-                }
-                return "N/A"
-            }
-        },
-        {
-            accessorKey: "settle_tx",
-            header: "Settlement transaction",
-            cell: ({ row }) => {
-                const settle_tx: string | null = row.getValue("settle_tx")
-                if (settle_tx) {
-                    let url = ''
-                    switch(row.original.settlement_mode) {
-                        case "spark":
-                            url = `https://sparkscan.io/tx/${settle_tx}`
-                            break
-                        case "btc":
-                            url = `https://www.blockchain.com/explorer/transactions/btc/${settle_tx}`
-                            break
-                        default:
-                            return <></>
-                    }
-
-                    return (
-                        <div className="flex items-center gap-2">
-                            {shortenAddress(settle_tx)}
-                            <Button variant="link" size="sm" popoverTarget="" onClick={() => window.open(url, '_blank')}><ExternalLink /></Button>
-                        </div>
-                    )
-                }
-                return "N/A"
             }
         },
         {
@@ -126,16 +93,58 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
 
                 const canDeriveReceipts = row.original.settle_tx && !receipts.find(r => r.paymentId == row.original.id)
 
+                const settle_tx: string | undefined = row.original.settle_tx
+                let settle_tx_url: string | undefined
+                if (settle_tx) {
+                    switch (row.original.settlement_mode) {
+                        case "spark":
+                            settle_tx_url = `https://sparkscan.io/tx/${settle_tx}`
+                            break
+                        case "btc":
+                            settle_tx_url = `https://www.blockchain.com/explorer/transactions/btc/${settle_tx}`
+                            break
+                        default:
+                            return <></>
+                    }
+                }
+
+                const redeemTx: string | undefined = row.original.redeem_tx
+                let redeemTxUrl: string | undefined
+                if (redeemTx) {
+                    redeemTxUrl = `https://sparkscan.io/tx/${redeemTx}`
+                }
+
+                const actionToDo = canDeriveReceipts || row.original.claimable > 0
+
                 return (
-                    <div className="flex gap-1">
-                        {!row.original.settle_tx && <Button variant="link" size="sm" popoverTarget="" onClick={() => window.open(`#/payment/${row.original.id}`, '_blank')}>Open payment's page <ExternalLink /></Button>}
-                        {!row.original.settle_tx && <Button variant="outline" onClick={() => onRemove(row.original.id)}>Remove <CircleMinus /></Button>}
-                        {canDeriveReceipts && <IssueReceiptForm buttonVariant='outline' onSubmit={onDeriveReceipt} buttonText="Derive receipt" amount={row.original.amount} description={row.original.description} paymentId={row.original.id} paymentRequests={paymentRequests} />}
-                        {row.original.claimable > 0 && <Button onClick={handleClaim}>Claim {row.original.claimable} BTC {claimLoading && <Spinner />}</Button>}
-                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <div className="flex gap-1 items-center">
+                                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                                <span className={`relative flex size-2 ${actionToDo ? 'visible' : 'invisible'}`}>
+                                    <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75'></span>
+                                    <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
+                                </span>
+                                <span className="sr-only">Open menu</span>
+                            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {!row.original.settle_tx && <DropdownMenuItem onClick={() => window.open(`#/payment/${row.original.id}`, '_blank')}>Open payment's page <ExternalLink /></DropdownMenuItem>}
+                            {canDeriveReceipts && <IssueReceiptForm buttonVariant='none' onSubmit={onDeriveReceipt} buttonText="Derive receipt" amount={row.original.amount} description={row.original.description} paymentId={row.original.id} paymentRequests={paymentRequests} />}
+                            {row.original.claimable > 0 && <DropdownMenuItem onClick={handleClaim} className="text-primary">Claim {row.original.claimable} BTC {claimLoading && <Spinner />}</DropdownMenuItem>}
+                            {settle_tx_url && <DropdownMenuItem onClick={() => window.open(settle_tx_url, '_blank')}>Open settlement transaction <ExternalLink /></DropdownMenuItem>}
+                            {redeemTxUrl && <DropdownMenuItem onClick={() => window.open(redeemTxUrl, '_blank')}>Open redeem transaction <ExternalLink /></DropdownMenuItem>}
+                            {!row.original.settle_tx && <DropdownMenuItem onClick={() => onRemove(row.original.id)}>Remove <CircleMinus /></DropdownMenuItem>}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )
             }
-        }
+        },
+
     ] as ColumnDef<Payment>[]
 }
 

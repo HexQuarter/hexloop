@@ -8,6 +8,7 @@ import { Button } from "./ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { ChevronDown, MoreVertical } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
 type NavItemType = {
   title: string
@@ -23,7 +24,7 @@ export function SiteHeader() {
 
   const { wallet } = useWallet()
 
-  const [network, setNetwork] = useState("mainnet")
+  const [status, setStatus] = useState<undefined | { status: string, active: boolean }>({ status: 'operational', active: true })
   const [sparkAddress, setSparkAddress] = useState("")
 
   const [menuItems, setMenuItems] = useState<NavItemType[]>([
@@ -45,11 +46,8 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (wallet) {
-      const network = wallet.getNetwork()
-      setNetwork(network)
-
       wallet.getSparkAddress().then(setSparkAddress)
-
+      wallet.sparkStatus().then(setStatus)
     } sparkAddress
   }, [wallet])
 
@@ -95,9 +93,15 @@ export function SiteHeader() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <span className="text-primary text-xs p-1 pl-2 pr-2 flex items-center gap-2 border-1 border-primary/40 bg-primary/10 rounded-sm">
-                  {network}
-                </span>
+                {status &&
+                  <Tooltip>
+                    <TooltipTrigger><div className={`${status.active ? 'bg-green-400' : 'bg-primary'} rounded-full w-2 h-2`}></div></TooltipTrigger>
+                    <TooltipContent className="flex flex-col gap-2">
+                      <p>Connected to Spark</p>
+                      <p>Status: {status.status}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                }
               </div>
 
               <div className="sm:hidden w-full">
@@ -111,6 +115,7 @@ export function SiteHeader() {
 
                   <CollapsibleContent className="absolute top-12 p-5 right-0 border rounded-md flex flex-col gap-5 bg-white border-primary/20 text-xs">
                     <p className="text-primary">{shortenAddress(sparkAddress)}</p>
+
                     <button
                       onClick={logout}
                       className="w-full text-left hover:bg-primary/10"

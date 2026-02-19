@@ -34,7 +34,7 @@ type Props = {
     paymentId?: string,
     paymentRequests: Payment[],
     onSubmit: (data: IssueReceiptData) => Promise<void>
-    buttonVariant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost"
+    buttonVariant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | 'none'
 }
 
 export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, buttonText = 'New receipt', buttonVariant = 'default', amount, description, paymentId }) => {
@@ -82,7 +82,10 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild onClick={() => setOpen(true)} >
-                <Button className="w-full lg:w-auto" variant={buttonVariant || 'default'}>{buttonText}</Button>
+                <div>
+                    {buttonVariant != 'none' && <Button className="w-full lg:w-auto" variant={buttonVariant || 'default'}>{buttonText}</Button>}
+                    {buttonVariant == 'none' && <Button variant='ghost' className="justify-start pl-2 w-full text-primary">{buttonText}</Button>}
+                </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden bg-gray-50 overflow-y-auto">
                 <DialogHeader className="">

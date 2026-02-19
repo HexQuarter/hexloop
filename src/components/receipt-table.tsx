@@ -2,7 +2,7 @@ import { type ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "./ui/data-table"
 import React, { useState } from "react"
-import { MoreHorizontal } from "lucide-react"
+import { ExternalLink, MoreHorizontal } from "lucide-react"
 import { Button } from "./ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { ReceiptMetadataForm, type ReceiptMetadataData } from "./receipt-metadata-form"
@@ -112,7 +112,7 @@ const getColumns = (openMetadataModalFn: (metadata: ReceiptMetadataData) => void
                                 Edit metadata
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => window.open(`https://sparkscan.io/tx/${tx}?network=${network}`, '_blank')}>
-                                View on SparkScan
+                                Open issuance transaction <ExternalLink />
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
