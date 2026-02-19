@@ -30,12 +30,15 @@ export const LandingPage = () => {
               <span>Built on Bitcoin</span>
             </Badge>
           </div>
-          <div className='font-semibold'>
+          <div className='font-semibold flex flex-col md:gap-2 gap-10'>
             <h1 className='text-7xl text-slate-900'><span className='text-primary'>Tokenize</span> completed work.</h1>
             <h2 className='text-5xl'>Build <span className='text-primary'>repeat business.</span></h2>
           </div>
-          <div className='flex flex-col gap-5'>
-            <h3 className='text-slate-500 text-2xl font-light'>Issue Bitcoin-anchored work receipts after you get paid. <br />Clients redeem them for discounts on future projects.</h3>
+          <div className='flex flex-col gap-10'>
+            <h3 className='text-slate-500 text-2xl font-light flex flex-col gap-2'>
+              <p>Issue Bitcoin-anchored work receipts after you get paid. </p>
+              <p>Clients redeem them for discounts on future projects.</p>
+            </h3>
             <div className='flex flex-col text-sm text-gray-500 gap-3'>
               <p className='flex items-center gap-2'><CheckCircle2 className='h-5' /> No custody, no processors</p>
               <p className='flex items-center gap-2'><CheckCircle2 className='h-5' /> <span>Just <span className='text-primary'>proof of work</span> that compounds into loyalty</span></p>
@@ -46,11 +49,11 @@ export const LandingPage = () => {
           </div>
         </div>
         <div className='flex'>
-          <div className='flex flex-col gap-30 px-5 lg:px-30 py-10 lg:py-20 border-t border-primary/10 bg-slate-50 w-full'>
+          <div className='flex flex-col gap-30 px-5 lg:px-30 py-10 lg:py-20 border-t border-primary/10 w-full'>
             <div className='flex flex-col gap-5 pb-10 pt-10'>
               <div className='flex lg:flex-row flex-col gap-20 '>
                 <div className='flex flex-col gap-10 w-full '>
-                  <div className='flex flex-col gap-2'>
+                  <div className='flex flex-col gap-5'>
                     <div className='bg-primary/80 w-1/12 h-1'></div>
                     <p className='text-4xl font-semibold text-slate-600'>Most loyalty systems reward spending.</p>
                   </div>
@@ -63,7 +66,7 @@ export const LandingPage = () => {
                   </div>
                 </div>
                 <div className='flex flex-col gap-5 lg:gap-18 w-full'>
-                  <div className='flex flex-col gap-2'>
+                  <div className='flex flex-col gap-5'>
                     <div className='bg-primary/80 w-1/12 h-1'></div>
                     <p className='flex text-4xl gap-2 font-semibold text-slate-600'>How this is different ?</p>
                   </div>
@@ -125,10 +128,10 @@ export const LandingPage = () => {
           </div>
         </div>
 
-        <div className='flex flex-col justify-between gap-20 lg:gap-30 px-5 lg:px-30 py-15 lg:py-30 relative border-t border-primary/10'>
+        <div className='flex flex-col justify-between gap-20 lg:gap-30 px-5 lg:px-30 py-15 lg:py-30 relative border-t border-primary/10 bg-primary/80'>
           <div
-            className='absolute inset-50
-            h-100
+            className='absolute inset-70
+            h-150
             [background-size:10px_10px]
             [background-image:radial-gradient(#f5f5f5_1px,transparent_1px)]
             '
@@ -136,18 +139,17 @@ export const LandingPage = () => {
           <div className='flex flex-1 justify-center z-20'>
             <div className='flex flex-col gap-5 text-center'>
               <h2 className='text-5xl font-bold'>The Loop Of Work</h2>
-              <p className='text-2xl text-slate-400 '>From payment to loyalty: <span className='text-primary'>four</span> steps. <span className='text-primary'>One</span> continuous loop.</p>
+              <p className='text-2xl text-slate-800 '>From payment to loyalty: <span className='text-white font-bold'>four</span> steps. <span className='text-white font-bold'>One</span> continuous loop.</p>
             </div>
           </div>
-          <div className='flex flex-col lg:flex-row gap-10 lg:gap-5 relative justify-center'>
-            <div className="flex flex-col items-center text-center space-y-6 w-100">
+          <div className='flex flex-col md:flex-row gap-10 lg:gap-5 relative justify-center '>
+            <div className="flex flex-col items-center text-center space-y-6 md:w-1/4 bg-white p-10 rounded-lg shadow-lg md:hover:scale-110 transition-transform duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 blur-2xl rounded-full group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-white/40 border-primary/40 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white border-primary/40 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg ">
                   1
                 </div>
               </div>
-              <Coins className="h-10 w-10 text-primary/80" />
+              <Coins className="h-10 w-10 text-primary" />
               <div className="space-y-3">
                 <h4 className="font-display text-xl text-foreground">Get paid</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed font-light">
@@ -155,10 +157,9 @@ export const LandingPage = () => {
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-center text-center space-y-6 w-100">
+            <div className="flex flex-col items-center text-center space-y-6 md:w-1/4 bg-white p-10 rounded-lg shadow-lg md:hover:scale-110 transition-transform duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 blur-2xl rounded-full group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-white/40 border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white  border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
                   2
                 </div>
               </div>
@@ -171,10 +172,9 @@ export const LandingPage = () => {
               </div>
 
             </div>
-            <div className="flex flex-col items-center text-center space-y-6 w-100">
+            <div className="flex flex-col items-center text-center space-y-6 md:w-1/4 bg-white p-10 rounded-lg shadow-lg md:hover:scale-110 transition-transform duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 blur-2xl rounded-full group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-white/40 border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white  border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
                   3
                 </div>
               </div>
@@ -186,10 +186,9 @@ export const LandingPage = () => {
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-center text-center space-y-6 w-100">
+            <div className="flex flex-col items-center text-center space-y-6 md:w-1/4 bg-white p-10 rounded-lg shadow-lg md:hover:scale-110 transition-transform duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 blur-2xl rounded-full group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-white/40 border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white  border-primary/30 border-1 text-accent-foreground font-display text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
                   4
                 </div>
               </div>
@@ -257,8 +256,8 @@ export const LandingPage = () => {
                   <p className='text-slate-500 flex items-center gap-2'><CheckCircle2 className='h-5 text-primary' /> <span>Once created, receipts tokens are associated to your wallet.</span></p>
                   <p className='text-slate-500 flex items-center gap-2'><CheckCircle2 className='h-5 text-primary' /> <span>We don't and we <strong>can't have access</strong> to your funds.</span></p>
                 </div>
-                <div className='w-/12 border-1 border-primary/20 flex items-center rounded-lg p-10 bg-primary/10'>
-                  <p className='font-bold text-3xl'>You remain the <span className='text-primary'>sole owner</span> of your assets.</p>
+                <div className='w-/12 border-1 border-primary/20 flex items-center rounded-lg p-10 bg-primary/80'>
+                  <p className='font-bold text-3xl'>You remain the <span className='text-white'>sole owner</span> of your assets.</p>
                 </div>
               </div>
             </div>
