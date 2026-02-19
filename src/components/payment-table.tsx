@@ -70,6 +70,19 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
             header: "Status",
             cell: ({ row }) => {
                 const settle_tx: string | undefined = row.original.settle_tx
+                // TODO: provide tooltip on the status to explain
+                // For settlement: mention which settlement method
+                // For discounted: mention how many tokens have been redeemed
+                // For minted: mention the receipt have been created
+                return (
+                    <div className="flex gap-2">
+                        {row.original.redeem_tx && <span className="text-xs text-white bg-black/40 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Discounted</span>}
+                        {row.original.settlement_mode && <span className="text-xs text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>}
+                        {row.original.settlement_mode && receipts.find(r => r.paymentId == row.original.id) && <span className="text-xs text-slate-600 bg-primary/20 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Minted</span>}
+                        {!row.original.settlement_mode && <span className="text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>}
+                    </div>
+                )
+
                 if (settle_tx) {
                     return <span className="text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>
                 }
@@ -92,6 +105,8 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                 }
 
                 const canDeriveReceipts = row.original.settle_tx && !receipts.find(r => r.paymentId == row.original.id)
+                const derivedReceipt = receipts.find(r => r.paymentId == row.original.id)
+                const deriveReceiptTx = derivedReceipt ? `https://sparkscan.io/tx/${derivedReceipt.transaction}` : ''
 
                 const settle_tx: string | undefined = row.original.settle_tx
                 let settle_tx_url: string | undefined
@@ -138,6 +153,7 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                             {row.original.claimable > 0 && <DropdownMenuItem onClick={handleClaim} className="text-primary">Claim {row.original.claimable} BTC {claimLoading && <Spinner />}</DropdownMenuItem>}
                             {settle_tx_url && <DropdownMenuItem onClick={() => window.open(settle_tx_url, '_blank')}>Open settlement transaction <ExternalLink /></DropdownMenuItem>}
                             {redeemTxUrl && <DropdownMenuItem onClick={() => window.open(redeemTxUrl, '_blank')}>Open redeem transaction <ExternalLink /></DropdownMenuItem>}
+                            {derivedReceipt && <DropdownMenuItem onClick={() => window.open(deriveReceiptTx, '_blank')}>Open receipt mint transaction <ExternalLink /></DropdownMenuItem>}
                             {!row.original.settle_tx && <DropdownMenuItem onClick={() => onRemove(row.original.id)}>Remove <CircleMinus /></DropdownMenuItem>}
                         </DropdownMenuContent>
                     </DropdownMenu>
