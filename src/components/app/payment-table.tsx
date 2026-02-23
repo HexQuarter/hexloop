@@ -1,13 +1,14 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
-import { DataTable } from "./ui/data-table"
+import { DataTable } from "@/components/ui/data-table"
 import React, { useState } from "react"
 import { CircleMinus, ExternalLink, MoreHorizontal } from "lucide-react"
-import { Button } from "./ui/button"
-import { Spinner } from "./ui/spinner"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { IssueReceiptForm, type IssueReceiptData } from "./issue-receipt"
 import type { Receipt } from "./receipt-table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export type Payment = {
     created_at: Date
@@ -69,24 +70,50 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
-                const settle_tx: string | undefined = row.original.settle_tx
-                // TODO: provide tooltip on the status to explain
-                // For settlement: mention which settlement method
-                // For discounted: mention how many tokens have been redeemed
-                // For minted: mention the receipt have been created
                 return (
                     <div className="flex gap-2">
-                        {row.original.redeem_tx && <span className="text-xs text-white bg-black/40 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Discounted</span>}
-                        {row.original.settlement_mode && <span className="text-xs text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>}
-                        {row.original.settlement_mode && receipts.find(r => r.paymentId == row.original.id) && <span className="text-xs text-slate-600 bg-primary/20 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Minted</span>}
-                        {!row.original.settlement_mode && <span className="text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>}
-                    </div>
-                )
+                        {row.original.redeem_tx &&
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs text-white bg-black/70 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Discounted</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{`${row.original.redeem_amount} tokens have been redeemed.`}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        }
 
-                if (settle_tx) {
-                    return <span className="text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>
-                }
-                return <span className="text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>
+                        {row.original.settlement_mode &&
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs text-green-600 bg-green-600/20 pl-2 pr-2 pt-1 pb-1 rounded">Settled</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{`Payment have been settled on ${row.original.settlement_mode.toUpperCase()}.`}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        }
+                        {row.original.settlement_mode && receipts.find(r => r.paymentId == row.original.id) && 
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs text-slate-600 bg-primary/20 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Minted</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{`Receipt have been derived for this payment.`}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        }
+                        {!row.original.settlement_mode && 
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-xs text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{`Payment is not yet settled. A settlement transaction is required to finalize this payment.`}</p>
+                            </TooltipContent>
+                        </Tooltip>}
+                    </div >
+                )
             }
         },
         {
@@ -150,7 +177,7 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                             <DropdownMenuSeparator />
                             {!row.original.settle_tx && <DropdownMenuItem onClick={() => window.open(`#/payment/${row.original.id}`, '_blank')}>Open payment's page <ExternalLink /></DropdownMenuItem>}
                             {canDeriveReceipts && <IssueReceiptForm buttonVariant='none' onSubmit={onDeriveReceipt} buttonText="Derive receipt" amount={row.original.amount} description={row.original.description} paymentId={row.original.id} paymentRequests={paymentRequests} />}
-                            {row.original.claimable > 0 && <DropdownMenuItem onClick={handleClaim} className="text-primary">Claim {row.original.claimable} BTC {claimLoading && <Spinner />}</DropdownMenuItem>}
+                            {row.original.claimable > 0 && <DropdownMenuItem onClick={handleClaim} className="text-primary font-semibold">Claim {row.original.claimable} BTC {claimLoading && <Spinner />}</DropdownMenuItem>}
                             {settle_tx_url && <DropdownMenuItem onClick={() => window.open(settle_tx_url, '_blank')}>Open settlement transaction <ExternalLink /></DropdownMenuItem>}
                             {redeemTxUrl && <DropdownMenuItem onClick={() => window.open(redeemTxUrl, '_blank')}>Open redeem transaction <ExternalLink /></DropdownMenuItem>}
                             {derivedReceipt && <DropdownMenuItem onClick={() => window.open(deriveReceiptTx, '_blank')}>Open receipt mint transaction <ExternalLink /></DropdownMenuItem>}

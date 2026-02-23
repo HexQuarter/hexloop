@@ -1,10 +1,10 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
-import { DataTable } from "./ui/data-table"
+import { DataTable } from "@/components/ui/data-table"
 import React, { useState } from "react"
 import { ExternalLink, MoreHorizontal } from "lucide-react"
-import { Button } from "./ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ReceiptMetadataForm, type ReceiptMetadataData } from "./receipt-metadata-form"
 // import { shortenAddress } from "@/lib/utils"
 // import { toast } from "sonner"

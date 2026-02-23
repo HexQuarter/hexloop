@@ -13,11 +13,11 @@ import { Input } from "@/components/ui/input"
 import { Coins } from "lucide-react"
 import type React from "react"
 import { useEffect, useState, type FormEvent } from "react"
-import { Spinner } from "./ui/spinner"
-import { Textarea } from "./ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
+import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Payment } from "./payment-table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export type IssueReceiptData = {
     description?: string
@@ -37,7 +37,7 @@ type Props = {
     buttonVariant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | 'none'
 }
 
-export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, buttonText = 'New receipt', buttonVariant = 'default', amount, description, paymentId }) => {
+export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, buttonText = 'New receipt', buttonVariant = 'outline', amount, description, paymentId }) => {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -87,7 +87,7 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
                     {buttonVariant == 'none' && <Button variant='ghost' className="justify-start pl-2 w-full text-primary">{buttonText}</Button>}
                 </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden bg-gray-50 overflow-y-auto">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden bg-slate-50 overflow-y-auto">
                 <DialogHeader className="">
                     <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2"><Coins className="text-primary" />Issue receipt</DialogTitle>
                     <DialogDescription className="flex flex-col gap-2">
@@ -98,7 +98,7 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
                     <div className="flex flex-col gap-4 my-4">
                         <Card className="grid gap-3">
                             <CardHeader>
-                                <CardTitle className="font-semibold text-black">Receipt Value</CardTitle>
+                                <CardTitle className="font-semibold text-black">Receipt value</CardTitle>
                                 <CardDescription className="text-xs">Represents completed work. Redeemable according to your terms for discounting.</CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -111,7 +111,7 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
                         </Card>
                         <Card className="grid gap-3">
                             <CardHeader>
-                                <CardTitle className="font-semibold text-black">Project Description</CardTitle>
+                                <CardTitle className="font-semibold text-black">Project description</CardTitle>
                                 <CardDescription className="text-xs">Describe the work that was completed. This creates a clear, auditable record tied to the issued receipt.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-2">
@@ -147,7 +147,7 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" className="bg-white">Cancel</Button>
                         </DialogClose>
                         <Button type="submit" disabled={loading} > {loading && <Spinner />} Issue Receipt</Button>
                     </DialogFooter>

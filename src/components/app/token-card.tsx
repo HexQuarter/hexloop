@@ -1,7 +1,7 @@
 import React from "react"
-import { Button } from "./ui/button"
+import { Button } from "@/components/ui/button"
 import { ExternalLink } from "lucide-react"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart } from "recharts"
 import type { TokenMetadata } from "@/lib/wallet"
 

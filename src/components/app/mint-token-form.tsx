@@ -14,8 +14,8 @@ import { Label } from "@/components/ui/label"
 import { PlusCircle } from "lucide-react"
 import type React from "react"
 import { useState, type FormEvent } from "react"
-import { Spinner } from "./ui/spinner"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { Spinner } from "@/components/ui/spinner"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export type MintSubmitData = {
     amount: number

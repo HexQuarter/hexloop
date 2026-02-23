@@ -118,7 +118,7 @@ export const createPaymentRequest = async (wallet: Wallet, amount: number, token
         throw new Error('No session token found');
     }
 
-    const resNonce = await fetch(getApiUrl('/account/nonce'), {
+    const resNonce = await fetch(getApiUrl('/payment-request-nonce'), {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,

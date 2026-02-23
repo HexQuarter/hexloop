@@ -6,7 +6,7 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "./ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 type Props = {
     onSubmit: (mnemonic: string) => void
@@ -87,7 +87,7 @@ export const PassphraseForm: React.FC<Props> = ({ onSubmit, onBack, loading = fa
                     {mnemonic.map((_word, index) => (
                         <Field key={index}>
                             <Input
-                                className="text-gray-500 text-sm"
+                                className="text-muted-foreground text-sm h-10"
                                 required
                                 onChange={(e) => {
                                     handleMnemonicChange(e, index);
@@ -97,11 +97,11 @@ export const PassphraseForm: React.FC<Props> = ({ onSubmit, onBack, loading = fa
                         </Field>
                     ))}
                 </div>
-                <Button variant='link' onClick={() => onBack()}>Back</Button>
-                {error && <p className="col-span-3 text-red-500 text-sm italic mt-2">{error}</p>}
-                <Field>
-                    {valid && <Button type="submit" disabled={loading}>{loading && <Spinner />} Connect this wallet to the app</Button>}
-                </Field>
+                <div className="flex flex-col lg:flex-row gap-2">
+                    <Button variant='outline' className='flex-1 w-full' onClick={() => onBack()}>Back</Button>
+                    {error && <p className="col-span-3 text-red-500 text-sm italic mt-2">{error}</p>}
+                    {valid && <Button type="submit" className='flex-1 w-full' disabled={loading}>{loading && <Spinner />} Join{loading && 'ing'} your workspace</Button>}
+                </div>
             </FieldGroup>
         </form>
     )

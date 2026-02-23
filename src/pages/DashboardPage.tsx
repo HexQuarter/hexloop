@@ -1,21 +1,21 @@
-import { NewTokenForm } from "@/components/new-token-form"
+import { NewTokenForm } from "@/components/app/new-token-form"
 
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useWallet } from "@/hooks/use-wallet"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
-import { WalletCard } from "@/components/wallet-card"
-import { TokenCard, type IssuanceStats } from "@/components/token-card"
-import { IssueReceiptForm, type IssueReceiptData } from "@/components/issue-receipt"
-import { PaymentRequestForm, type PaymentRequestData } from "@/components/payment-request"
-import { ReceiptTable, type Receipt } from "@/components/receipt-table"
+import { WalletCard } from "@/components/app/wallet-card"
+import { TokenCard, type IssuanceStats } from "@/components/app/token-card"
+import { IssueReceiptForm, type IssueReceiptData } from "@/components/app/issue-receipt"
+import { PaymentRequestForm, type PaymentRequestData } from "@/components/app/payment-request"
+import { ReceiptTable, type Receipt } from "@/components/app/receipt-table"
 import { type SparkPayment, type TokenBalanceMap, type TokenMetadata, type TokenTransaction, type Wallet } from "@/lib/wallet"
 import { createPaymentRequest, deletePaymentRequest, fetchPaymentRequest, fetchPaymentRequests, fetchReceiptMetadata, patchReceiptMetadata } from "@/lib/api"
-import { PaymentTable, type Payment } from "@/components/payment-table"
-import type { Asset } from "@/components/send"
+import { PaymentTable, type Payment } from "@/components/app/payment-table"
+import type { Asset } from "@/components/app/send"
 import { send } from "@/lib/utils"
-import type { ReceiptMetadataData } from "@/components/receipt-metadata-form"
+import type { ReceiptMetadataData } from "@/components/app/receipt-metadata-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const DashboardPage = () => {
@@ -271,7 +271,7 @@ export const DashboardPage = () => {
 
         const { paymentRequestId } = await createPaymentRequest(wallet, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
         const paymentRequest = await fetchPaymentRequest(paymentRequestId)
-        setPaymentRequests((prev) => [...prev, {
+        setPaymentRequests((prev) => [{
             id: paymentRequestId,
             amount: data.amount,
             description: paymentRequest.description,
@@ -282,7 +282,7 @@ export const DashboardPage = () => {
             redeem_tx: undefined,
             claimable: 0,
             nonce: paymentRequest.nonce
-        }])
+        }, ...prev])
         toast.success('Payment request created successfully')
     }
 
@@ -340,184 +340,188 @@ export const DashboardPage = () => {
         <div className="flex flex-1 flex-col h-full w-full pb-10">
             <div className="flex flex-col w-full h-full">
                 <div className="flex flex-col gap-5">
-                    <div className="flex flex-col w-full gap-10">
-                        <header className="flex flex-col gap-5 bg-primary/5 pt-10 pb-10 px-5 lg:px-10 border-b-3 border-primary/10">
-                            <h1 className="text-5xl font-semibold flex lg:flex-row flex-col gap-2 ">
+                    <div className="flex flex-col w-full gap-10 mt-10 px-10">
+                        <div className="flex lg:flex-row flex-col gap-2 justify-between">
+                            <h1 className="text-5xl font-serif font-normal text-foreground">
                                 <span>Dashboard</span>
                                 <span className="text-primary">& Loyalty</span>
                             </h1>
-                            {!initializing && !tokenMetadata &&
-                                <>
-                                    <h2 className="text-2xl font-light text-slate-500">Set up your loyalty token</h2>
-                                    <p>Create a token to issue receipts for completed work and enable client discounts.</p>
-                                    <div className="flex flex-col gap-2 text-sm text-slate-500">
-                                        <p>Each time you deliver a project, you mint tokens as proof of completed work.</p>
-                                        <p>Clients redeem those tokens for future discounts — encouraging repeat business.</p>
-                                    </div>
-                                    <div>
-                                        <NewTokenForm onSubmit={handleNewToken} />
-                                    </div>
-                                </>
-                            }
 
-                            <div className="flex flex-col gap-5">
-                                <h2 className="text-2xl font-light text-slate-500">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
-                                <div className="flex lg:flex-row flex-col gap-5">
-                                    <Card className="lg:w-1/4">
-                                        <CardHeader>
-                                            <CardHeader className="flex flex-col p-0">
-                                                <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                                    <p className="text-2xl text-slate-700">Receipt Program </p>
-                                                </CardTitle>
-                                                <CardDescription>Represents paid work that can be redeemed for future discounts</CardDescription>
-                                            </CardHeader>
-                                        </CardHeader>
-                                        <CardContent className="">
-                                            {initializing &&
-                                                <>
-                                                    <Skeleton className="h-4 w-full mb-4" />
-                                                    <Skeleton className="h-4 w-full mb-4" />
-                                                    <Skeleton className="h-4 w-3/4 mt-10 mb-4" />
-                                                    <Skeleton className="aspect-video w-full h-20" />
-                                                    <Skeleton className="h-4 w-full mt-4" />
-                                                </>
-                                            }
-                                            {!initializing && tokenMetadata &&
-                                                <TokenCard tokenMetadata={tokenMetadata} issuanceStats={issuanceStats} network={wallet?.getNetwork() as string} />
-                                            }
-                                        </CardContent>
-                                    </Card>
-                                    <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-3/4 lg:col-span-1 2xl:col-span-2">
-                                        <CardHeader className="flex flex-col">
-                                            <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                                <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-2">
-                                                    <p className="text-2xl text-slate-700">Receipts</p>
-                                                    <CardAction>
-                                                        {initializing && <Skeleton className="h-10 w-30" />}
-                                                        {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
-                                                    </CardAction>
-                                                </div>
-                                            </CardTitle>
-                                            <CardDescription>Receipts issued for completed and paid work</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            {initializing &&
-                                                <div className="flex w-full flex-col gap-2">
-                                                    {Array.from({ length: 5 }).map((_, index) => (
-                                                        <div className="flex gap-4" key={index}>
-                                                            <Skeleton className="h-10 flex-1" />
-                                                            <Skeleton className="h-10 flex-1" />
-                                                            <Skeleton className="h-10 flex-1" />
-                                                            <Skeleton className="h-10 flex-1" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            }
-                                            {!initializing &&
-                                                <ReceiptTable
-                                                    network={wallet?.getNetwork() as string}
-                                                    receipts={receipts}
-                                                    paymentRequests={paymentRequests}
-                                                    onMetadataChange={handleReceiptMetadataChange} />
-                                            }
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            </div>
-                        </header>
+                        </div>
+                        <h2 className="text-2xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
+                        {!initializing && !tokenMetadata &&
+                            <Card>
+                                <CardHeader>
+                                    <h2 className="text-xl font-semibold">Set up your loyalty token</h2>
+                                    <div className="flex flex-col text-muted-foreground gap-0">
+                                        <p>Deploy a token to issue receipts for completed work and enable client discounts.</p>
+                                        <p>Each time you deliver a project, you can mint tokens as proof of completed work.</p>
+                                        <p>Those tokens can be redeemed for future discounts — encouraging repeated <span className="text-primary font-bold">loop of work</span>.</p>
+                                    </div>
+                                </CardHeader>
+                                <CardFooter>
+                                    <NewTokenForm onSubmit={handleNewToken} />
+                                </CardFooter>
+                            </Card>
+                        }
+                    <div className="flex lg:flex-row flex-col gap-5">
 
-                        <div className="flex lg:flex-row flex-col gap-5 px-5 lg:px-10">
-                            {initializing &&
-                                <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-1/4">
-                                    <CardHeader className="flex flex-col gap-5">
-                                        <CardTitle className="text-2xl text-slate-700">Wallet</CardTitle>
-                                        <CardDescription className="w-full">
-                                            <div className="flex flex-col gap-2">
-                                                <Skeleton className="h-7 w-20" />
-                                                <Skeleton className="h-4 w-30" />
-                                            </div>
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="flex flex-col gap-5">
-                                        <div className="flex gap-2">
-                                            <Skeleton className="h-9 w-20" />
-                                            <Skeleton className="h-9 w-20" />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Skeleton className="h-5 w-20" />
-                                            <Skeleton className="h-5 w-20" />
-                                        </div>
+                        {initializing &&
+                            <Card className="lg:w-1/4">
+                                <CardHeader className="flex flex-col gap-5">
+                                    <CardTitle className="text-2xl text-slate-700">Wallet</CardTitle>
+                                    <CardDescription className="w-full">
                                         <div className="flex flex-col gap-2">
-                                            <Skeleton className="h-15 w-full" />
+                                            <Skeleton className="h-7 w-20" />
+                                            <Skeleton className="h-4 w-30" />
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            }
-                            {!initializing && wallet && addresses && <WalletCard
-                                addresses={addresses}
-                                btcBalance={Number(btcBalance) / (10 ** 8)}
-                                tokens={tokensData}
-                                tokenMetadata={tokenMetadata}
-                                price={price}
-                                currency={currency}
-                                onSend={handleSend}
-                                payments={walletHistory}
-                                wallet={wallet} />}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex flex-col gap-5">
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-9 w-20" />
+                                        <Skeleton className="h-9 w-20" />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-5 w-20" />
+                                        <Skeleton className="h-5 w-20" />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <Skeleton className="h-15 w-full" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        }
+                        {!initializing && wallet && addresses && <WalletCard
+                            addresses={addresses}
+                            btcBalance={Number(btcBalance) / (10 ** 8)}
+                            tokens={tokensData}
+                            tokenMetadata={tokenMetadata}
+                            price={price}
+                            currency={currency}
+                            onSend={handleSend}
+                            payments={walletHistory}
+                            wallet={wallet} />}
 
-                            <Card className="flex flex-col gap-10 border-primary/20 rounded-sm lg:w-3/4 lg:col-span-2 2xl:col-span-4">
+                        <Card className="lg:w-3/4 lg:col-span-2 2xl:col-span-4">
+                            <CardHeader className="flex flex-col">
+                                <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
+                                    <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
+                                        <p className="text-2xl border-primary/40 flex gap-2 font-bold text-slate-700">Payment requests</p>
+                                        {initializing && <Skeleton className="h-10 w-40" />}
+                                        {!initializing && <CardAction className='w-full lg:w-auto'>
+                                            <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
+                                        </CardAction>}
+                                    </div>
+
+                                </CardTitle>
+                                <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {initializing &&
+                                    <div className="flex w-full flex-col gap-2">
+                                        {Array.from({ length: 5 }).map((_, index) => (
+                                            <div className="flex gap-4" key={index}>
+                                                <Skeleton className="h-10 w-2/8" />
+                                                <Skeleton className="h-10 w-1/8" />
+                                                <Skeleton className="h-10 w-2/8" />
+                                                <Skeleton className="h-10 w-1/8" />
+                                                <Skeleton className="h-10 w-1/8" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                                {!initializing &&
+                                    <PaymentTable
+                                        data={paymentRequests.map(r => ({
+                                            created_at: r.created_at,
+                                            amount: r.amount,
+                                            description: r.description,
+                                            settle_tx: r.settle_tx,
+                                            discount_rate: r.discount_rate,
+                                            id: r.id,
+                                            redeem_amount: r.redeem_amount,
+                                            redeem_tx: r.redeem_tx,
+                                            claimable: r.claimable,
+                                            nonce: r.nonce,
+                                            settlement_mode: r.settlement_mode
+                                        }))}
+                                        onRemove={handleRemovePaymentRequest}
+                                        onClaim={handleClaimPaymentRequest}
+                                        onDeriveReceipt={handleIssueReceipt}
+                                        paymentRequests={paymentRequests}
+                                        receipts={receipts} />}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+
+                    {tokenMetadata &&
+                        <div className="flex lg:flex-row flex-col gap-5">
+                            <Card className="lg:w-1/4">
+                                <CardHeader>
+                                    <CardHeader className="flex flex-col p-0">
+                                        <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
+                                            <p className="text-2xl text-slate-700">Receipt Program </p>
+                                        </CardTitle>
+                                        <CardDescription>Represents paid work that can be redeemed for future discounts</CardDescription>
+                                    </CardHeader>
+                                </CardHeader>
+                                <CardContent className="">
+                                    {initializing &&
+                                        <>
+                                            <Skeleton className="h-4 w-full mb-4" />
+                                            <Skeleton className="h-4 w-full mb-4" />
+                                            <Skeleton className="h-4 w-3/4 mt-10 mb-4" />
+                                            <Skeleton className="aspect-video w-full h-20" />
+                                            <Skeleton className="h-4 w-full mt-4" />
+                                        </>
+                                    }
+                                    {!initializing && tokenMetadata &&
+                                        <TokenCard tokenMetadata={tokenMetadata} issuanceStats={issuanceStats} network={wallet?.getNetwork() as string} />
+                                    }
+                                </CardContent>
+                            </Card>
+                            <Card className="lg:w-3/4 lg:col-span-1 2xl:col-span-2">
                                 <CardHeader className="flex flex-col">
                                     <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                        <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
-                                            <p className="text-2xl border-primary/40 flex gap-2 font-bold text-slate-700">Payment requests</p>
-                                            {initializing && <Skeleton className="h-10 w-40" />}
-                                            {!initializing && <CardAction className='w-full lg:w-auto'>
-                                                <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
-                                            </CardAction>}
+                                        <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-2">
+                                            <p className="text-2xl text-slate-700">Receipts</p>
+                                            <CardAction>
+                                                {initializing && <Skeleton className="h-10 w-30" />}
+                                                {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
+                                            </CardAction>
                                         </div>
-
                                     </CardTitle>
-                                    <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
+                                    <CardDescription>Receipts issued for completed and paid work</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     {initializing &&
                                         <div className="flex w-full flex-col gap-2">
                                             {Array.from({ length: 5 }).map((_, index) => (
                                                 <div className="flex gap-4" key={index}>
-                                                    <Skeleton className="h-10 w-2/8" />
-                                                    <Skeleton className="h-10 w-1/8" />
-                                                    <Skeleton className="h-10 w-2/8" />
-                                                    <Skeleton className="h-10 w-1/8" />
-                                                    <Skeleton className="h-10 w-1/8" />
+                                                    <Skeleton className="h-10 flex-1" />
+                                                    <Skeleton className="h-10 flex-1" />
+                                                    <Skeleton className="h-10 flex-1" />
+                                                    <Skeleton className="h-10 flex-1" />
                                                 </div>
                                             ))}
                                         </div>
                                     }
                                     {!initializing &&
-                                        <PaymentTable
-                                            data={paymentRequests.map(r => ({
-                                                created_at: r.created_at,
-                                                amount: r.amount,
-                                                description: r.description,
-                                                settle_tx: r.settle_tx,
-                                                discount_rate: r.discount_rate,
-                                                id: r.id,
-                                                redeem_amount: r.redeem_amount,
-                                                redeem_tx: r.redeem_tx,
-                                                claimable: r.claimable,
-                                                nonce: r.nonce,
-                                                settlement_mode: r.settlement_mode
-                                            }))}
-                                            onRemove={handleRemovePaymentRequest}
-                                            onClaim={handleClaimPaymentRequest}
-                                            onDeriveReceipt={handleIssueReceipt}
+                                        <ReceiptTable
+                                            network={wallet?.getNetwork() as string}
+                                            receipts={receipts}
                                             paymentRequests={paymentRequests}
-                                            receipts={receipts} />}
+                                            onMetadataChange={handleReceiptMetadataChange} />
+                                    }
                                 </CardContent>
                             </Card>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
+        </div>
         </div >
     )
 }

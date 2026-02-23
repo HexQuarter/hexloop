@@ -6,7 +6,7 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
-import { Spinner } from "./ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 type Props = {
     onSubmit: (mnemonic: string) => void
@@ -41,7 +41,7 @@ export const CreateWalletForm: React.FC<Props> = ({ onSubmit, onBack ,loading = 
                 <div className="flex flex-col gap-5">
                     <div className="grid grid-cols-3 gap-4 text-center">
                         {mnemonic.map((word, index) => (
-                            <div className='border-1 border-input items-center flex justify-center rounded-sm text-black font-medium shadow-xs text-sm h-9' key={index}>{word}</div>
+                            <div className='border-1 border-input items-center flex justify-center rounded-sm text-muted-foreground font-medium shadow-xs text-sm h-10' key={index}>{word}</div>
                         ))}
                     </div>
                     <div className='flex text-sm text-gray-600 gap-2 justify-end' onClick={() => copy()}>
@@ -49,9 +49,9 @@ export const CreateWalletForm: React.FC<Props> = ({ onSubmit, onBack ,loading = 
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col gap-2 items-center">
-                <Button variant='outline' className="w-full" onClick={() => onBack()}>Back</Button>
-                <Button type="submit" className='w-full' onClick={() => onSubmit(mnemonic.join(' '))} disabled={loading}>{loading && <Spinner />} Open the app</Button>
+            <div className="flex lg:flex-row flex-col gap-2 items-center w-full">
+                <Button variant='outline' className='flex-1 w-full' onClick={() => onBack()}>Back</Button>
+                <Button type="submit" className='flex-1 w-full'  onClick={() => onSubmit(mnemonic.join(' '))} disabled={loading}>{loading && <Spinner />} Open the app</Button>
             </div>
         </div>
     )

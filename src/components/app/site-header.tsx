@@ -1,14 +1,15 @@
 import { IconDashboard, type Icon } from "@tabler/icons-react"
-import { Logo } from "@/components/logo"
 import { Link, useLocation, useNavigate } from "react-router"
 import { useEffect, useState } from "react"
 import { useWallet } from "@/hooks/use-wallet"
 import { shortenAddress } from "@/lib/utils"
-import { Button } from "./ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, MoreVertical } from "lucide-react"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+
+import LogoPng from '../../../public/logo.svg'
 
 type NavItemType = {
   title: string
@@ -66,7 +67,15 @@ export function SiteHeader() {
         <div className="flex justify-between items-center w-full">
           <div className='flex gap-5'>
             <h1 className="">
-              <Link to='/app'><Logo /></Link>
+              <Link to='/app'>
+                <div className='flex items-center gap-2 text-1xl'>
+                  <img src={LogoPng} className='w-10' />
+                  <div className='font-serif text-2xl tracking-tight text-foreground flex items-center'>
+                    <span className='text-primary'>Tx</span>
+                    <span className=''>Loop</span>
+                  </div>
+                </div>
+              </Link>
             </h1>
             <nav className="flex gap-4 text-sm items-center">
               {menuItems.filter(i => i.visible).map((item: NavItemType, index: number) => (
@@ -82,12 +91,12 @@ export function SiteHeader() {
               <div className="flex text-xs items-center gap-2 text-gray-500 hidden sm:flex">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' className="text-xs">{shortenAddress(sparkAddress)} <MoreVertical /></Button>
+                    <Button variant='ghost' className="text-xs rounded-full">{shortenAddress(sparkAddress)} <MoreVertical /></Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {/* <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator /> */}
-                    <DropdownMenuItem className="text-xs focus:text-primary focus:bg-primary/10" onClick={logout} >
+                    <DropdownMenuItem className="text-xs focus:text-primary focus:bg-primary/10 h-8" onClick={logout} >
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>

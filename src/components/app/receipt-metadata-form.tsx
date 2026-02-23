@@ -1,12 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react"
-import { Button } from "./ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
-// import { Input } from "./ui/input"
-import { Spinner } from "./ui/spinner"
-import { Textarea } from "./ui/textarea"
-import { Coins } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import { Edit } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Payment } from "./payment-table"
 
 export type ReceiptMetadataData = {
@@ -52,9 +51,9 @@ export const ReceiptMetadataForm: React.FC<Props> = ({ metadata, onSubmit, onClo
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[425px] bg-gray-50">
+            <DialogContent className="sm:max-w-[425px] bg-slate-50">
                 <DialogHeader className="">
-                    <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2"><Coins className="text-primary" />Update Receipt Metadata</DialogTitle>
+                    <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2 font-serif text-2xl font-normal"><Edit className="text-primary" />Update receipt's metadata</DialogTitle>
                     <DialogDescription className="flex flex-col gap-2">
                         You can define metadata related to minted receipts. This would help you for audit and history.
                     </DialogDescription>
@@ -99,7 +98,7 @@ export const ReceiptMetadataForm: React.FC<Props> = ({ metadata, onSubmit, onClo
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" className="bg-white">Cancel</Button>
                         </DialogClose>
                         <Button type="submit" disabled={loading} > {loading && <Spinner />} Update receipt metadata</Button>
                     </DialogFooter>

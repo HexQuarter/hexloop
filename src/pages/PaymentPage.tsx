@@ -1,7 +1,6 @@
-import { TabsReceive, type TabType } from "@/components/ receive_tabs"
-import { Logo } from "@/components/logo"
+import { TabsReceive, type TabType } from "@/components/app/receive-tabs"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { confirmRedeem, fetchPaymentRequest, getPaymentPrice, type PaymentRequest } from "@/lib/api"
@@ -12,6 +11,8 @@ import { useParams } from "react-router"
 
 import { AddressPurpose, getProviders, request, RpcErrorCode } from "sats-connect";
 import { toast } from "sonner"
+
+import LogoPng from '../../public/logo.svg'
 
 function formatTime(seconds: number) {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -32,6 +33,7 @@ export const PaymentPage: React.FC = () => {
     const [wallet, setWallet] = useState<string | null>(null)
     const [availableWallet, setAvailableWallet] = useState<boolean>(false)
     const [fetchError, setFetchError] = useState<string>("")
+    const [fetchErrorDetails, setFetchErrorDetails] = useState<string>("")
 
     const [redeemLoading, setRedeemLoading] = useState(false)
     const [redeeemError, setRedeemError] = useState<undefined | string>(undefined)
@@ -69,7 +71,8 @@ export const PaymentPage: React.FC = () => {
                 setLoading(false)
                 if (paymentRequest.settled_tx) {
                     setCompleted(true)
-                    setFetchError("Payment request already fullfilled")
+                    setFetchError("Payment request already fullfilled.")
+                    setFetchErrorDetails("The payment associated with this request has already been received and processed. If you believe this is an error, please contact the merchant for assistance.")
                     return
                 }
 
@@ -81,7 +84,8 @@ export const PaymentPage: React.FC = () => {
             })
                 .catch(() => {
                     setLoading(false)
-                    setFetchError('Payment request is not found')
+                    setFetchError('Payment request is not found.')
+                    setFetchErrorDetails('The payment request you are trying to access does not exist. Please check the link or contact the merchant for assistance.')
                 })
         }
     }, [])
@@ -226,37 +230,49 @@ export const PaymentPage: React.FC = () => {
     const maxRedeemableToken = Math.floor(Math.max(0, maxRedeemable))
 
     return (
-        <div className="flex min-h-dvh flex-col items-center justify-center p-6 md:p-10 bg-primary/10">
+        <div className="flex min-h-dvh flex-col items-center justify-center p-6 md:p-10 bg-slate-50">
             <div className="w-full max-w-sm md:max-w-6xl ">
                 <div className="text-2xl mb-5 flex flex-col lg:flex-row justify-between items-center">
-                    <a href='/'><Logo /></a>
-                    {wallet && <div className="mt-2 flex text-right text-xs text-gray-600 bg-primary/10 border-primary border-1 rounded-full p-2 text-primary">
-                        <Wallet className="h-4" />
-                        <span>Connected wallet: {shortenAddress(wallet)}</span>
-                    </div>}
+                    <a href='/'>
+                        <div className='flex items-center gap-2'>
+                            <img src={LogoPng} className='w-5' />
+                            <div className='font-serif text-lg tracking-tight text-foreground flex items-center'>
+                                <span className='text-primary'>Tx</span>
+                                <span className=''>Loop</span>
+                            </div>
+                        </div>
+                    </a>
+
                 </div>
                 <div className="flex flex-col gap-6">
-                    <Card className="p-0 z-20">
-                        <CardContent className="flex flex-col lg:flex-row p-0">
-                            <div className="flex flex-col gap-10 p-5 lg:p-20 bg-white w-full">
-                                {loading && <p className="flex items-center gap-2 text-primary text-sm">Fetching payment details... <Spinner /></p>}
-                                {!loading && fetchError && <h1 className="text-3xl text-black">{fetchError}</h1>}
-                                {!loading && paymentReceived &&
-                                    <div className="flex flex-col gap-5 min-h-100">
-                                        <p className="text-3xl">Payment <span className="text-primary
-                                        ">received</span></p>
-                                        <p className="text-xl">Congratulations !</p>
-                                        <p className="text-gray-500">Your payment have been completed.</p>
+                    {!loading && !fetchError && <h1 className="text-5xl font-bold font-serif font-light">Payment request</h1>}  
+                    <Card className="lg:p-10">
+                        <CardHeader>
+                            {loading && <p className="flex items-center gap-2 text-primary text-sm">Fetching payment details... <Spinner /></p>}
+                            {!loading && fetchError && <h1 className="text-3xl text-black font-serif">{fetchError}</h1>}
+                            {!loading && paymentReceived && <p className="text-3xl">Payment received</p>}
+                        </CardHeader>
+                        <CardContent className="flex flex-col lg:flex-row">
+                            {!loading && fetchErrorDetails && <p className="text-sm text-gray-500">{fetchErrorDetails}</p>}
+                            {!loading && paymentReceived &&
+                                <div className="flex flex-col gap-5">
+                                    <p className="text-2xl text-primary">Congratulations !</p>
+                                    <div className="flex flex-col">
+                                        <p className="text-muted-foreground">Your payment has been received and processed.</p>
+                                        <p className="text-muted-foreground">The merchand will be notified of your payment, and may be in contact with you shortly.</p>
+                                        <p className="mt-8">You can now close this window. </p>
                                     </div>
-                                }
-                                {!loading && paymentRequest && !paymentReceived && (
-                                    <div className="flex flex-col gap-10">
-                                        <h1 className="text-3xl text-black"><span className="text-primary">Payment</span> request </h1>
-                                        <p className="text-sm text-slate-400">Find payment details below.</p>
-                                        <div className="flex flex-col gap-5">
-                                            <span className="text-slate-500 text-xl">Amount</span>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="font-medium flex gap-2 items-center">
+                                </div>
+                            }
+                            {!loading && paymentRequest && !paymentReceived && (
+                                <div className="flex lg:flex-row flex-col justify-between w-full gap-10">
+                                    <div className="flex flex-col lg:w-1/2 gap-5 lg:p-5">
+                                        <h2 className="mb-10 font-mono text-sm font-medium tracking-[0.2em] text-muted-foreground/50 uppercase">Payment details</h2>
+                                        <p className="text-sm text-muted-foreground">Please review the payment details below. Once reviewed, you can proceed with the payment by following the instruction in the right panel.</p>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xl">Amount</span>
+                                            <div className="flex flex-col gap-1 text-muted-foreground">
+                                                <span className="font-medium flex gap-2 items-center text-sm">
                                                     {alreadyRedeemedTokens > 0 && <span className="line-through">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(paymentRequest.amount + alreadyRedeemedTokens)}</span>}
                                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(paymentRequest.amount)}
                                                     <span className="text-sm">({btcAmount} BTC)</span></span>
@@ -264,8 +280,8 @@ export const PaymentPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-slate-500 text-xl">Description</span>
-                                            <span className="text-sm font-medium">{paymentRequest.description || 'No description provided'}</span>
+                                            <span className="text-xl">Description</span>
+                                            <span className="text-sm font-medium text-muted-foreground">{paymentRequest.description || 'No description provided'}</span>
                                         </div>
                                         {alreadyRedeemedTokens == 0 && maxRedeemableToken > 0 &&
                                             <div className="flex flex-col gap-1">
@@ -281,9 +297,9 @@ export const PaymentPage: React.FC = () => {
                                                 }
                                                 {availableWallet && wallet &&
                                                     <div className="mt-2 flex flex-col gap-2">
-                                                        <span className="text-slate-500 text-xl">Loyalty discount</span>
+                                                        <span className="text-xl">Loyalty discount</span>
                                                         {tokenBalance &&
-                                                            <div className="flex flex-col gap-2">
+                                                            <div className="flex flex-col gap-2 text-muted-foreground">
                                                                 <div>
                                                                     <p className="text-sm">You have {tokenBalance.amount} <strong>{tokenBalance.name}</strong> tokens.</p>
                                                                     <p className="text-sm">You can redeem up to {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(maxRedeemable)} ({maxRedeemableToken} tokens).</p>
@@ -309,22 +325,22 @@ export const PaymentPage: React.FC = () => {
                                         }
                                         {alreadyRedeemedTokens > 0 &&
                                             <div className="flex flex-col gap-5">
-                                                <span className="text-slate-500 text-xl">Loyalty discount</span>
-                                                <div className="flex flex-col gap-3 items-start">
+                                                <span className="text-xl">Loyalty discount</span>
+                                                <div className="flex flex-col gap-3 items-start text-muted-foreground">
                                                     <p className="text-sm">A discount have been already applied after redeeming of {alreadyRedeemedTokens} tokens.</p>
                                                     <Button variant='link' className='text-sm p-0 h-0' onClick={() => window.open(`https://sparkscan.io/tx/${paymentRequest.redeem_tx}`, '_blank')}>Check out transaction</Button>
                                                 </div>
                                             </div>
                                         }
                                     </div>
-                                )}
-                            </div>
-                            {paymentRequest && !paymentReceived &&
-                                <div className="bg-gray-50 p-5 lg:h-full items-center justify-center lg:p-20">
-                                    <div className="flex flex-col gap-10">
-                                        <div className="text-3xl flex items-center justify-between">
-                                            <p><span className="text-primary">Payment</span> method</p>
-                                            {availableWallet && !wallet && <Button className="mt-2 text-xs" size='sm' onClick={connectWallet}>Connect wallet</Button>}
+                                    <div className="flex flex-col gap-10 rounded-sm lg:w-1/2 bg-primary/10 p-5">
+                                        <div className="flex items-center justify-between flex-col lg:flex-row items-start">
+                                            <h2 className="font-mono text-sm font-medium tracking-[0.2em] text-muted-foreground/50 uppercase text-primary">Payment instructions</h2>
+                                            {availableWallet && !wallet && <Button className="text-xs lg:w-auto w-full" onClick={connectWallet}>Connect wallet</Button>}
+                                            {wallet && <div className="flex items-center text-right text-xs text-gray-600 bg-primary/10 border-primary border-1 rounded-full p-2 text-primary">
+                                                <Wallet className="h-4" />
+                                                <span>Wallet: {shortenAddress(wallet)}</span>
+                                            </div>}
                                         </div>
                                         {!availableWallet && <div className="flex flex-col items-start">
                                             <p className="text-xs">No browser wallet found.</p>
@@ -346,10 +362,10 @@ export const PaymentPage: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
-                            }
+                            )}
                         </CardContent>
                     </Card>
-                    <p className="text-xs text-center text-slate-600">If you encounter any issue, please reach us to <a href='mailto:contact@hexquarter.com'>contact@hexquarter.com</a></p>
+                    <p className="text-xs text-center text-slate-600">If you encounter any issue, please reach us to <a href='mailto:loop@hexquarter.com'>loop@hexquarter.com</a></p>
                 </div>
             </div>
         </div >

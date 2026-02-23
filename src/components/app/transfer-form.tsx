@@ -11,34 +11,29 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Coins } from "lucide-react"
 import type React from "react"
 import { useState, type FormEvent } from "react"
-import { Spinner } from "./ui/spinner"
+import { Spinner } from "@/components/ui/spinner"
 
-type SubmitData = {
-    symbol: string,
-    name: string
+export type TransferSubmitData = {
+    address: string,
+    amount: number
 }
 
 type Props = {
-    onSubmit: (data: SubmitData) => Promise<void>
+    onSubmit: (data: TransferSubmitData) => Promise<void>
 }
 
-export const NewTokenForm: React.FC<Props> = ({ onSubmit }) => {
-    const [name, setName] = useState("")
-    const [symbol, setSymbol] = useState("")
+export const TransferForm: React.FC<Props> = ({ onSubmit }) => {
+    const [address, setAddress] = useState("")
+    const [amount, setAmount] = useState(0)
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setLoading(true)
-
-        // TODO: Short and Memorable: Keep tickers to 3-5 characters
-        // TODO: Uppercase: Use all uppercase letters
-
-        await onSubmit({ name, symbol })
+        await onSubmit({ address, amount })
         setLoading(false)
         setOpen(false)
     }
@@ -46,11 +41,11 @@ export const NewTokenForm: React.FC<Props> = ({ onSubmit }) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild onClick={() => setOpen(true)} >
-                <Button>Create token</Button>
+                <Button>Transfer</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] hb">
-                <DialogHeader className="">
-                    <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2"><Coins className="text-primary"/>Token issuance</DialogTitle>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Transfer token</DialogTitle>
                     <DialogDescription>
                         Send tokens to another wallet address
                     </DialogDescription>
@@ -58,19 +53,19 @@ export const NewTokenForm: React.FC<Props> = ({ onSubmit }) => {
                 <form onSubmit={(e) => handleSubmit(e)}>
                     <div className="flex flex-col gap-4 my-4">
                         <div className="grid gap-3">
-                            <Label htmlFor="name" className="text-primary text-md text-slate-500">Token name</Label>
-                            <Input id="name" onChange={(e) => setName(e.target.value)} />
+                            <Label htmlFor="address">Recipient address</Label>
+                            <Input required id="address" onChange={(e) => setAddress(e.target.value)} />
                         </div>
                         <div className="grid gap-3">
-                            <Label htmlFor="symbol" className="text-primary text-md text-slate-500">Token ticker</Label>
-                            <Input id="symbol" onChange={(e) => setSymbol(e.target.value)} />
+                            <Label htmlFor="amount">Amount</Label>
+                            <Input required id="amount" type='number' min='0' onChange={(e) => setAmount(parseFloat(e.target.value))} />
                         </div>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
-                        <Button type="submit" disabled={loading} > { loading && <Spinner />} Create the token</Button>
+                        <Button type="submit" disabled={loading} > { loading && <Spinner />} Confirm the transfer</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

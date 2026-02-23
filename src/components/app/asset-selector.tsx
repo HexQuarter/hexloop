@@ -1,5 +1,5 @@
 import type { Asset } from "./send"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type Props = {
     assets: Asset[]

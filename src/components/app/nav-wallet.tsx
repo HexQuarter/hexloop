@@ -14,8 +14,8 @@ import {
 import { useWallet } from "@/hooks/use-wallet"
 import { CopyIcon } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "./ui/button"
-import { Spinner } from "./ui/spinner"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { shortenAddress } from "@/lib/utils"
 import { useEffect, useState } from "react"
 

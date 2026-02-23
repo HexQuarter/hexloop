@@ -1,4 +1,4 @@
-import type { Asset } from "@/components/send";
+import type { Asset } from "@/components/app/send";
 import { bech32m } from "bech32";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
