@@ -39,7 +39,7 @@ export const authenticateUser = async (mnemonic: string): Promise<{ token: strin
     }
 
     const { nonce } = challenge;
-    const message = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`loopofwork:${nonce}`));
+    const message = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`bitlasso:${nonce}`));
 
     const signature = key.sign(new Uint8Array(message), { canonical: true });
     const sigDer = signature.toDER("hex");
@@ -72,7 +72,7 @@ export const checkSessionValidity = async (token: string) => {
 }
 
 export const fetchReceiptMetadata = async (transactionId: string) => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }
@@ -92,7 +92,7 @@ export const fetchReceiptMetadata = async (transactionId: string) => {
 }
 
 export const patchReceiptMetadata = async (transactionId: string, description?: string, recipient?: string, paymentId?: string) => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }
@@ -113,7 +113,7 @@ export const patchReceiptMetadata = async (transactionId: string, description?: 
 }
 
 export const createPaymentRequest = async (wallet: Wallet, amount: number, tokenId: string, discountRate: number, description?: string): Promise<{ paymentRequestId: string }> => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }
@@ -155,7 +155,7 @@ export const createPaymentRequest = async (wallet: Wallet, amount: number, token
 }
 
 export const fetchPaymentRequests = async (): Promise<Array<PaymentRequest>> => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }
@@ -183,7 +183,7 @@ export const fetchPaymentRequest = async (id: string): Promise<PaymentRequest> =
 }
 
 export const deletePaymentRequest = async (id: string): Promise<void> => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }
@@ -209,7 +209,7 @@ export const confirmRedeem = async (paymentRequestId: string, txId: string): Pro
 }
 
 export const confirmSettled = async (paymentRequestId: string, txId: string): Promise<void> => {
-    const token = localStorage.getItem('LOP_SESSION_TOKEN');
+    const token = localStorage.getItem('BITLASSO_SESSION_TOKEN');
     if (!token) {
         throw new Error('No session token found');
     }

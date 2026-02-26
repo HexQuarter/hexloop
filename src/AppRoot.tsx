@@ -14,19 +14,19 @@ export const AppRoot = () => {
 
   useEffect(() => {
     if (walletExists) {
-      const token = localStorage.getItem('LOP_SESSION_TOKEN')
+      const token = localStorage.getItem('BITLASSO_SESSION_TOKEN')
 
       if (token) {
         checkSessionValidity(token)
           .then(() => { setConnected(true) })
           .catch(() => {
-            const mnemonic = localStorage.getItem('LOP_MNEMONIC')
+            const mnemonic = localStorage.getItem('BITLASSO_MNEMONIC')
 
             if (mnemonic) {
               authenticateUser(mnemonic)
                 .then(({ token, expiresAt }) => {
-                  localStorage.setItem('LOP_SESSION_TOKEN', token)
-                  localStorage.setItem('LOP_SESSION_EXPIRES_AT', expiresAt.toString())
+                  localStorage.setItem('BITLASSO_SESSION_TOKEN', token)
+                  localStorage.setItem('BITLASSO_SESSION_EXPIRES_AT', expiresAt.toString())
                   setConnected(true)
                 })
                 .catch((e: Error) => {
@@ -64,9 +64,11 @@ export const AppRoot = () => {
   }
 
   return (
-    <div className='@container/main flex flex-col h-full bg-slate-50'>
-      <SiteHeader />
-      <div className="flex-col min-h-screen">
+    <div className='@container/main h-full bg-slate-50 '>
+      <div className='bg-white px-[2rem] py-5 border-b-5 border-primary/40'>
+        <div className='lg:mx-auto md:w-[90%]'><SiteHeader /></div>
+      </div>
+      <div className="lg:mx-auto md:w-[90%] min-h-screen justify-center py-10 px-[2rem] flex flex-col">
         <App />
       </div>
     </div>

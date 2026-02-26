@@ -1,4 +1,4 @@
-# HexLoop
+# BitLasso
 
 Work becomes value.
 Value returns as opportunity.
@@ -54,4 +54,6 @@ Four steps. One continuous loop.
   •	No financial engineering
   •	No custody of funds
 
-HexLoop is a product of HexQuarter.
+## License
+
+BitLasso is a product of HexQuarter.

@@ -2,11 +2,11 @@ import { NewTokenForm } from "@/components/app/new-token-form"
 
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useWallet } from "@/hooks/use-wallet"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { WalletCard } from "@/components/app/wallet-card"
-import { TokenCard, type IssuanceStats } from "@/components/app/token-card"
+import { type IssuanceStats } from "@/components/app/token-card"
 import { IssueReceiptForm, type IssueReceiptData } from "@/components/app/issue-receipt"
 import { PaymentRequestForm, type PaymentRequestData } from "@/components/app/payment-request"
 import { ReceiptTable, type Receipt } from "@/components/app/receipt-table"
@@ -17,6 +17,10 @@ import type { Asset } from "@/components/app/send"
 import { send } from "@/lib/utils"
 import type { ReceiptMetadataData } from "@/components/app/receipt-metadata-form"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Coins, ExternalLink, FileText, MoreHorizontal, Pickaxe, RefreshCcw, Rocket, Wallet2, Zap } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { RevenueChart } from "@/components/app/revenue-chart"
 
 export const DashboardPage = () => {
     const { wallet } = useWallet()
@@ -32,7 +36,7 @@ export const DashboardPage = () => {
     const [receipts, setReceipts] = useState<Receipt[]>([])
     const [walletHistory, setWalletHistory] = useState<SparkPayment[]>([])
 
-    const currency = localStorage.getItem('LOP_CURRENCY') || 'USD'
+    const currency = localStorage.getItem('BITLASSO_CURRENCY') || 'USD'
 
     const updateBalance = async (wallet: Wallet) => {
         const balance = await wallet.getBalance()
@@ -336,158 +340,310 @@ export const DashboardPage = () => {
         }
     }
 
+    const revenuePayments = useMemo(() => {
+        return paymentRequests
+            .filter(p => p.settle_tx !== undefined)
+            .reduce<{ date: string, amount: number }[]>((acc, p) => {
+                if (acc.length == 0) {
+                    acc.push({ date: p.created_at.toISOString().split('T')[0], amount: p.amount })
+                }
+                else {
+                    const lastItem = acc[acc.length - 1]
+                    acc.push({ date: p.created_at.toISOString().split('T')[0], amount: lastItem.amount + p.amount })
+                }
+                return acc
+            }, [])
+    }, [paymentRequests])
+
+    const revenue = useMemo(() => {
+        return paymentRequests.filter(p => p.settle_tx !== undefined).reduce((acc, p) => p.amount + acc, 0)
+    }, [paymentRequests])
+
+
+    const pendingPayments = useMemo(() => {
+        return paymentRequests.filter(p => p.settle_tx === undefined).length
+    }, [paymentRequests])
+
+    const redeemedTokens = useMemo(() => {
+        return issuanceStats.filter(s => s.type == 'burn').reduce((acc, p) => acc + p.amount, 0)
+    }, [issuanceStats])
+
     return (
-        <div className="flex flex-1 flex-col h-full w-full pb-10">
+        <div className="flex flex-1 flex-col h-full w-full">
             <div className="flex flex-col w-full h-full">
-                <div className="flex flex-col gap-5">
-                    <div className="flex flex-col w-full gap-10 mt-10 px-10">
-                        <div className="flex lg:flex-row flex-col gap-2 justify-between">
-                            <h1 className="text-5xl font-serif font-normal text-foreground">
-                                <span>Dashboard</span>
-                                <span className="text-primary">& Loyalty</span>
-                            </h1>
-
+                <div className="flex flex-col gap-5 w-full">
+                    <div className="flex flex-col w-full gap-10">
+                        <div className="flex flex-col gap-2 justify-between">
+                            <h1 className="text-4xl font-serif font-normal text-foreground">Dashboard</h1>
+                            <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
                         </div>
-                        <h2 className="text-2xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
-                        {!initializing && !tokenMetadata &&
-                            <Card>
-                                <CardHeader>
-                                    <h2 className="text-xl font-semibold">Set up your loyalty token</h2>
-                                    <div className="flex flex-col text-muted-foreground gap-0">
-                                        <p>Deploy a token to issue receipts for completed work and enable client discounts.</p>
-                                        <p>Each time you deliver a project, you can mint tokens as proof of completed work.</p>
-                                        <p>Those tokens can be redeemed for future discounts — encouraging repeated <span className="text-primary font-bold">loop of work</span>.</p>
-                                    </div>
-                                </CardHeader>
-                                <CardFooter>
-                                    <NewTokenForm onSubmit={handleNewToken} />
-                                </CardFooter>
-                            </Card>
-                        }
-                    <div className="flex lg:flex-row flex-col gap-5">
-
-                        {initializing &&
-                            <Card className="lg:w-1/4">
-                                <CardHeader className="flex flex-col gap-5">
-                                    <CardTitle className="text-2xl text-slate-700">Wallet</CardTitle>
-                                    <CardDescription className="w-full">
-                                        <div className="flex flex-col gap-2">
-                                            <Skeleton className="h-7 w-20" />
-                                            <Skeleton className="h-4 w-30" />
+                        {tokenMetadata && initializing &&
+                            <div className="grid lg:grid-cols-3 gap-2">
+                                <Card className="col-span-1">
+                                    <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-primary/10 p-3 rounded-full items-center"><Zap className="h-4 w-4 text-primary" /></span>
+                                            Total revenue
                                         </div>
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex flex-col gap-5">
-                                    <div className="flex gap-2">
-                                        <Skeleton className="h-9 w-20" />
-                                        <Skeleton className="h-9 w-20" />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Skeleton className="h-5 w-20" />
-                                        <Skeleton className="h-5 w-20" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Skeleton className="h-15 w-full" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        }
-                        {!initializing && wallet && addresses && <WalletCard
-                            addresses={addresses}
-                            btcBalance={Number(btcBalance) / (10 ** 8)}
-                            tokens={tokensData}
-                            tokenMetadata={tokenMetadata}
-                            price={price}
-                            currency={currency}
-                            onSend={handleSend}
-                            payments={walletHistory}
-                            wallet={wallet} />}
-
-                        <Card className="lg:w-3/4 lg:col-span-2 2xl:col-span-4">
-                            <CardHeader className="flex flex-col">
-                                <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                    <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
-                                        <p className="text-2xl border-primary/40 flex gap-2 font-bold text-slate-700">Payment requests</p>
-                                        {initializing && <Skeleton className="h-10 w-40" />}
-                                        {!initializing && <CardAction className='w-full lg:w-auto'>
-                                            <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
-                                        </CardAction>}
-                                    </div>
-
-                                </CardTitle>
-                                <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {initializing &&
-                                    <div className="flex w-full flex-col gap-2">
-                                        {Array.from({ length: 5 }).map((_, index) => (
-                                            <div className="flex gap-4" key={index}>
-                                                <Skeleton className="h-10 w-2/8" />
-                                                <Skeleton className="h-10 w-1/8" />
-                                                <Skeleton className="h-10 w-2/8" />
-                                                <Skeleton className="h-10 w-1/8" />
-                                                <Skeleton className="h-10 w-1/8" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                }
-                                {!initializing &&
-                                    <PaymentTable
-                                        data={paymentRequests.map(r => ({
-                                            created_at: r.created_at,
-                                            amount: r.amount,
-                                            description: r.description,
-                                            settle_tx: r.settle_tx,
-                                            discount_rate: r.discount_rate,
-                                            id: r.id,
-                                            redeem_amount: r.redeem_amount,
-                                            redeem_tx: r.redeem_tx,
-                                            claimable: r.claimable,
-                                            nonce: r.nonce,
-                                            settlement_mode: r.settlement_mode
-                                        }))}
-                                        onRemove={handleRemovePaymentRequest}
-                                        onClaim={handleClaimPaymentRequest}
-                                        onDeriveReceipt={handleIssueReceipt}
-                                        paymentRequests={paymentRequests}
-                                        receipts={receipts} />}
-                            </CardContent>
-                        </Card>
-                    </div>
-
-
-                    {tokenMetadata &&
-                        <div className="flex lg:flex-row flex-col gap-5">
-                            <Card className="lg:w-1/4">
-                                <CardHeader>
-                                    <CardHeader className="flex flex-col p-0">
-                                        <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                            <p className="text-2xl text-slate-700">Receipt Program </p>
-                                        </CardTitle>
-                                        <CardDescription>Represents paid work that can be redeemed for future discounts</CardDescription>
                                     </CardHeader>
+                                    <CardContent className="flex flex-col gap-5">
+                                        <Skeleton className="h-10 w-1/4" />
+                                        <Skeleton className="h-50 w-full" />
+                                    </CardContent>
+                                </Card>
+                                <div className="flex flex-col gap-2 col-span-1">
+                                    <Card className="flex-1">
+                                        <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-primary/10 p-3 rounded-full items-center"><FileText className="h-4 w-4 text-primary" /></span>
+                                                Activated payments
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-col gap-2">
+                                            <Skeleton className="h-10 w-1/6" />
+                                            <Skeleton className="h-10 w-1/4" />
+                                        </CardContent>
+                                    </Card>
+                                    <Card className="flex-1">
+                                        <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <div className="bg-primary/10 p-3 rounded-full items-center"><Coins className="h-4 w-4 text-primary" /></div>
+                                                Minted credits
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <div className="flex gap-1 items-center">
+                                                        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-col gap-2">
+                                            <Skeleton className="h-10 w-1/4" />
+                                            <Skeleton className="h-10 w-1/4" />
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                                <div className="flex flex-col gap-2 col-span-1">
+                                    <div className="flex-1">
+                                        <Card className="lg:col-span-1 h-full">
+                                            <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                                <div className="flex gap-2 items-center">
+                                                    <div className="bg-primary/10 p-3 rounded-full items-center"><Wallet2 className="h-4 w-4 text-primary" /></div>
+                                                    Wallet
+                                                </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <div className="flex gap-1 items-center">
+                                                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                            <span className="sr-only">Open menu</span>
+                                                        </div>
+                                                    </DropdownMenuTrigger>
+                                                </DropdownMenu>
+                                            </CardHeader>
+                                            <CardContent className="flex flex-col gap-5">
+                                                <div className="flex flex-col gap-2">
+                                                    <Skeleton className="h-9 w-1/5" />
+                                                    <Skeleton className="h-5 w-1/4" />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Skeleton className="h-10 w-10" />
+                                                    <Skeleton className="h-10 w-10" />
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <Skeleton className="h-50 w-full" />
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        {!initializing && tokenMetadata &&
+                            <div className="grid lg:grid-cols-3 gap-2">
+                                <Card className="col-span-1">
+                                    <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-primary/10 p-3 rounded-full items-center"><Zap className="h-4 w-4 text-primary" /></span>
+                                            Total revenue
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col gap-10">
+                                        <span className="text-2xl font-semibold">{Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(revenue)}</span>
+                                        <RevenueChart chartData={revenuePayments} />
+                                    </CardContent>
+                                </Card>
+                                <div className="flex flex-col gap-2 col-span-1">
+                                    <Card className="flex-1">
+                                        <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-primary/10 p-3 rounded-full items-center"><FileText className="h-4 w-4 text-primary" /></span>
+                                                Activated payments
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-col gap-2">
+                                            <span className="text-2xl font-semibold">{paymentRequests.length}</span>
+                                            <span className="text-xs text-muted-foreground">{pendingPayments} pendings</span>
+                                        </CardContent>
+                                    </Card>
+                                    <Card className="flex-1">
+                                        <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <div className="bg-primary/10 p-3 rounded-full items-center"><Coins className="h-4 w-4 text-primary" /></div>
+                                                Minted credits
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <div className="flex gap-1 items-center">
+                                                        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                        <span className="sr-only">Open menu</span>
+                                                    </div>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => window.open(`https://sparkscan.io/token/${tokenMetadata.identifier}`, '_blank')}>View details on explorer<ExternalLink /></DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-col gap-2">
+                                            <span className="text-2xl font-semibold">{issuanceStats.reduce((acc, s) => {
+                                                if (s.type == 'mint') {
+                                                    acc += s.amount
+                                                }
+                                                if (s.type == 'burn') {
+                                                    acc -= s.amount
+                                                }
+                                                return acc
+                                            }, 0)} {tokenMetadata.symbol}</span>
+                                            <span className="text-muted-foreground text-xs">{redeemedTokens} redeemed</span>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex-1">
+                                        {wallet && addresses &&
+                                            <WalletCard
+                                                addresses={addresses}
+                                                btcBalance={Number(btcBalance) / (10 ** 8)}
+                                                tokens={tokensData}
+                                                price={price}
+                                                currency={currency}
+                                                onSend={handleSend}
+                                                payments={walletHistory}
+                                                wallet={wallet} />}
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div className="grid lg:grid-cols-2 gap-2">
+                            {!initializing && !tokenMetadata &&
+                                <Card className="flex flex-col justify-between lg:col-span-1">
+                                    <CardHeader>
+                                        <h2 className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Set up your loyalty token</h2>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex flex-col text-sm gap-2 justify-between">
+                                            <div className="bg-white border-1 border-border/40 p-4 rounded-lg group flex gap-2 items-center">
+                                                <div className="text-primary flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/10 transition-all duration-300 group-hover:bg-primary/12 group-hover:ring-primary/20">
+                                                    <Rocket className="h-4" />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-sm font-semibold tracking-tight text-card-foreground">Deploy a token</p>
+                                                    <p className="text-muted-foreground text-xs">Issue receipts for completed work and enable client discounts.</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white border-1 border-border/40 p-4 rounded-lg flex gap-2 items-center">
+                                                <div className="text-primary flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/10 transition-all duration-300 group-hover:bg-primary/12 group-hover:ring-primary/20">
+                                                    <Pickaxe className="h-4" />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-sm font-semibold tracking-tight text-card-foreground">Minting</p>
+                                                    <p className="text-xs text-muted-foreground ">Each time you deliver a project, you can mint tokens as proof of completed work.</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white border-1 border-border/40 p-4 rounded-lg flex gap-2 items-center">
+                                                <div className="text-primary flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/10 transition-all duration-300 group-hover:bg-primary/12 group-hover:ring-primary/20">
+                                                    <RefreshCcw className="h-4" />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-sm font-semibold tracking-tight text-card-foreground">Loyalty</p>
+                                                    <p className="text-xs text-muted-foreground ">Those tokens can be redeemed for future discounts — encouraging repeated <span className="text-primary font-bold">loop of work</span>.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter>
+                                        <NewTokenForm onSubmit={handleNewToken} />
+                                    </CardFooter>
+                                </Card>
+                            }
+                            <Card className="lg:col-span-1" id="payments">
+                                <CardHeader className="flex flex-col">
+                                    <CardTitle className="flex lg:flex-row flex-col justify-between w-full gap-5">
+                                        <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
+                                            <p className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Payment requests</p>
+                                            {initializing && <Skeleton className="h-10 w-40" />}
+                                            {!initializing && <CardAction className='w-full lg:w-auto'>
+                                                <PaymentRequestForm onSubmit={handlePaymentRequest} price={price} />
+                                            </CardAction>}
+                                        </div>
+                                    </CardTitle>
+                                    <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
                                 </CardHeader>
-                                <CardContent className="">
+                                <CardContent>
                                     {initializing &&
-                                        <>
-                                            <Skeleton className="h-4 w-full mb-4" />
-                                            <Skeleton className="h-4 w-full mb-4" />
-                                            <Skeleton className="h-4 w-3/4 mt-10 mb-4" />
-                                            <Skeleton className="aspect-video w-full h-20" />
-                                            <Skeleton className="h-4 w-full mt-4" />
-                                        </>
+                                        <div className="flex w-full flex-col gap-2">
+                                            {Array.from({ length: 5 }).map((_, index) => (
+                                                <div className="flex gap-4" key={index}>
+                                                    <Skeleton className="h-10 w-2/8" />
+                                                    <Skeleton className="h-10 w-1/8" />
+                                                    <Skeleton className="h-10 w-2/8" />
+                                                    <Skeleton className="h-10 w-2/8" />
+                                                    <Skeleton className="h-10 w-1/8" />
+                                                </div>
+                                            ))}
+                                        </div>
                                     }
-                                    {!initializing && tokenMetadata &&
-                                        <TokenCard tokenMetadata={tokenMetadata} issuanceStats={issuanceStats} network={wallet?.getNetwork() as string} />
+                                    {!initializing &&
+                                        <div className="lg:max-w-full max-w-xs">
+                                            <PaymentTable
+                                                data={paymentRequests.map(r => ({
+                                                    created_at: r.created_at,
+                                                    amount: r.amount,
+                                                    description: r.description,
+                                                    settle_tx: r.settle_tx,
+                                                    discount_rate: r.discount_rate,
+                                                    id: r.id,
+                                                    redeem_amount: r.redeem_amount,
+                                                    redeem_tx: r.redeem_tx,
+                                                    claimable: r.claimable,
+                                                    nonce: r.nonce,
+                                                    settlement_mode: r.settlement_mode
+                                                }))}
+                                                onRemove={handleRemovePaymentRequest}
+                                                onClaim={handleClaimPaymentRequest}
+                                                onDeriveReceipt={handleIssueReceipt}
+                                                paymentRequests={paymentRequests}
+                                                receipts={receipts} />
+                                        </div>
                                     }
                                 </CardContent>
                             </Card>
-                            <Card className="lg:w-3/4 lg:col-span-1 2xl:col-span-2">
+                            {tokenMetadata && <Card className="lg:col-span-1" id="receipts">
                                 <CardHeader className="flex flex-col">
-                                    <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-5">
-                                        <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-2">
-                                            <p className="text-2xl text-slate-700">Receipts</p>
-                                            <CardAction>
+                                    <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-10">
+                                        <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-5">
+                                            <p className="text-2xl font-serif text-2xl font-light ">Receipts</p>
+                                            <CardAction >
                                                 {initializing && <Skeleton className="h-10 w-30" />}
                                                 {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
                                             </CardAction>
@@ -497,7 +653,7 @@ export const DashboardPage = () => {
                                 </CardHeader>
                                 <CardContent>
                                     {initializing &&
-                                        <div className="flex w-full flex-col gap-2">
+                                        <div className="flex flex-col gap-2">
                                             {Array.from({ length: 5 }).map((_, index) => (
                                                 <div className="flex gap-4" key={index}>
                                                     <Skeleton className="h-10 flex-1" />
@@ -508,20 +664,21 @@ export const DashboardPage = () => {
                                             ))}
                                         </div>
                                     }
-                                    {!initializing &&
-                                        <ReceiptTable
-                                            network={wallet?.getNetwork() as string}
-                                            receipts={receipts}
-                                            paymentRequests={paymentRequests}
-                                            onMetadataChange={handleReceiptMetadataChange} />
-                                    }
+                                    <div className="lg:max-w-full max-w-xs">
+                                        {!initializing &&
+                                            <ReceiptTable
+                                                network={wallet?.getNetwork() as string}
+                                                receipts={receipts}
+                                                paymentRequests={paymentRequests}
+                                                onMetadataChange={handleReceiptMetadataChange} />
+                                        }
+                                    </div>
                                 </CardContent>
-                            </Card>
+                            </Card>}
                         </div>
-                    }
+                    </div>
                 </div>
             </div>
-        </div>
         </div >
     )
 }

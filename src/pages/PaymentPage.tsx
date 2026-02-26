@@ -237,8 +237,8 @@ export const PaymentPage: React.FC = () => {
                         <div className='flex items-center gap-2'>
                             <img src={LogoPng} className='w-5' />
                             <div className='font-serif text-lg tracking-tight text-foreground flex items-center'>
-                                <span className='text-primary'>Tx</span>
-                                <span className=''>Loop</span>
+                                <span className='text-primary'>bit</span>
+                                lasso
                             </div>
                         </div>
                     </a>
@@ -365,7 +365,7 @@ export const PaymentPage: React.FC = () => {
                             )}
                         </CardContent>
                     </Card>
-                    <p className="text-xs text-center text-slate-600">If you encounter any issue, please reach us to <a href='mailto:loop@hexquarter.com'>loop@hexquarter.com</a></p>
+                    <p className="text-xs text-center text-slate-600">If you encounter any issue, please reach us to <a href='mailto:bitlasso@hexquarter.com'>bitlasso@hexquarter.com</a></p>
                 </div>
             </div>
         </div >

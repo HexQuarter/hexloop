@@ -29,7 +29,7 @@ const reasons = [
 
 const comparison = {
   traditional: ["Database-dependent", "Platform-locked", "Expires / devalues", "Opaque accounting"],
-  txloop: ["Cryptographically owned", "Fully portable", "Persistent value", "Transparent by design"],
+  bitlasso: ["Cryptographically owned", "Fully portable", "Persistent value", "Transparent by design"],
 }
 
 export function WhyBitcoinSection() {
@@ -64,7 +64,7 @@ export function WhyBitcoinSection() {
             <div className="p-8 md:p-12">
               <p className="mb-8 font-mono text-[10px] font-medium tracking-[0.2em] text-primary uppercase">TxLoop</p>
               <div className="flex flex-col gap-5">
-                {comparison.txloop.map((item) => (
+                {comparison.bitlasso.map((item) => (
                   <div key={item} className="flex items-center gap-4">
                     <div className="h-1.5 w-1.5 rounded-full bg-accent" />
                     <span className="text-[15px] font-medium text-foreground">{item}</span>

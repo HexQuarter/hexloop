@@ -21,7 +21,7 @@ function ScrollToAnchor() {
             setTimeout(() => {
                 document
                     .getElementById(lastHash.current)
-                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center',  });
                 lastHash.current = '';
             }, 100);
         }

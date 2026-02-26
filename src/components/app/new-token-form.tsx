@@ -49,9 +49,9 @@ export const NewTokenForm: React.FC<Props> = ({ onSubmit }) => {
             <DialogTrigger asChild onClick={() => setOpen(true)} >
                 <Button className="bg-primary hover:bg-black">Create token</Button>
             </DialogTrigger>
-            <DialogContent className="bg-gray-100">
+            <DialogContent className="bg-slate-50">
                 <DialogHeader>
-                    <DialogTitle className="text-slate-800 text-2xl pb-2 flex items-center gap-2"><Coins className="text-primary" />Token issuance</DialogTitle>
+                    <DialogTitle className="text-2xl pb-2 flex items-center gap-2 font-serif font-light"><Coins className="text-primary" />Token issuance</DialogTitle>
                     <DialogDescription>
                         Deploy a new loyalty token to issue receipts for completed work.
                     </DialogDescription>

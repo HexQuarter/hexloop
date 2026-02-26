@@ -19,11 +19,17 @@ export function Navbar() {
     return (
         <header className="fixed inset-x-0 top-0 z-50">
             <div className="mx-auto max-w-[90rem] px-6 pt-5 sm:px-10 lg:px-16">
-                <nav className="flex items-center justify-between rounded-full px-6 py-3 shadow-sm backdrop-blur-2xl sm:px-8 bg-transparent">
-                    <a href="#" className="font-serif text-2xl tracking-tight text-foreground flex items-center gap-2">
+                <nav className="flex items-center justify-between rounded-full px-6 py-3 shadow-sm backdrop-blur-lg sm:px-8 bg-transparent">
+                    <div className="font-serif tracking-tight text-foreground flex items-center gap-2">
                         <img src={LogoPng} className='w-10' />
-                        <span>Tx<span className="text-primary">Loop</span></span>
-                    </a>
+                        <div className='font-serif tracking-tighter text-foreground flex items-center'>
+                            <p className="flex gap-2 items-end">
+                                <a className="text-4xl" href='#'>
+                                    <span className="text-primary">bit</span>lasso
+                                </a>
+                            </p>
+                        </div>
+                    </div>
 
                     <div className="hidden items-center gap-1 md:flex">
                         {links.map((l) => (

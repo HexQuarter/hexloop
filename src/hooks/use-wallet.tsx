@@ -20,10 +20,10 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
     const [wallet, setWallet] = useState<Wallet | null>(null);
-    const [walletExists, setWalletExists] = useState(localStorage.getItem('LOP_MNEMONIC') != null ? true : false)
+    const [walletExists, setWalletExists] = useState(localStorage.getItem('BITLASSO_MNEMONIC') != null ? true : false)
 
     const loadWallet = async () => {
-        const mnemonic = localStorage.getItem('LOP_MNEMONIC')
+        const mnemonic = localStorage.getItem('BITLASSO_MNEMONIC')
         if (mnemonic) {
             const wallet = await BreezSparkWallet.initialize(
                 mnemonic,
@@ -51,13 +51,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const disconnect = () => {
         console.log('disconnecting')
-        localStorage.removeItem('LOP_MNEMONIC')
+        localStorage.removeItem('BITLASSO_MNEMONIC')
         setWallet(null)
         setWalletExists(false)
     };
 
     const storeWallet = async (mnemonic: string) => {
-        localStorage.setItem('LOP_MNEMONIC', mnemonic)
+        localStorage.setItem('BITLASSO_MNEMONIC', mnemonic)
         const wallet = await loadWallet()
         if (!wallet) throw new Error("Failed to load wallet after storing mnemonic")
         setWalletExists(true)

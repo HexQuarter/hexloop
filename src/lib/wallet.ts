@@ -139,7 +139,7 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
         config.maxDepositClaimFee = { type: 'rate', satPerVbyte: 10 }
 
         let builder = SdkBuilder.new(config, seed)
-        builder = await builder.withDefaultStorage('./loopofwork')
+        builder = await builder.withDefaultStorage('./bitlasso')
         const sdk = await builder.build()
 
         const buildSparkWalletFn = async (accountNumber: number) => {
@@ -151,7 +151,7 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
 
         const instance = new BreezSparkWallet(async () => {
             let builder = SdkBuilder.new(config, seed)
-            builder = await builder.withDefaultStorage('./loopofwork')
+            builder = await builder.withDefaultStorage('./bitlasso')
             return builder
         }, buildSparkWalletFn, sdk, sparkWallet, network)
 

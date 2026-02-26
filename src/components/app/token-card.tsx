@@ -1,8 +1,6 @@
-import React from "react"
-import { Button } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
+import React, { useMemo } from "react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
-import { Area, AreaChart } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import type { TokenMetadata } from "@/lib/wallet"
 
 const chartConfig = {
@@ -27,37 +25,52 @@ export type IssuanceStats = {
     tx: string
 }
 
-export const TokenCard: React.FC<Props> = ({ tokenMetadata, issuanceStats, network }) => {
+export const TokenCard: React.FC<Props> = ({ issuanceStats }) => {
+
+    const chartData = useMemo(() => {
+        return issuanceStats.map(s => {
+            return { date: s.date.toISOString().split('T')[0], amount: s.amount }
+        })
+    }, [issuanceStats])
+
     return (
         <div className="flex flex-col">
             <div className="flex flex-col gap-2 text-sm">
-                <p>Name: {tokenMetadata.name}</p>
-                <p>Unit: {tokenMetadata.symbol}</p>
+                {/* <p>Name: {tokenMetadata.name}</p>
+                <p>Unit: {tokenMetadata.symbol}</p> */}
 
-                <p className="mt-5 font-semibold">Supply LifeCycle</p>
-                <ChartContainer config={chartConfig} className="aspect-auto h-20">
-                    <AreaChart data={issuanceStats}>
-                        <Area
-                            dataKey="amount"
-                            type="natural"
-                            fill="var(--color-amount)"
-                            fillOpacity={0.4}
-                            stroke="var(--color-amount)"
-                            stackId="a"
+                {/* <p className="mt-5 font-semibold">Supply LifeCycle</p> */}
+                <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+                    <AreaChart data={chartData}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => {
+                                const date = new Date(value)
+                                return date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                })
+                            }}
                         />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip
+                            content={<ChartTooltipContent indicator="dot" />}
+                        />
+                        <Area
+                            dataKey='amount'
+                            type="basis"
+                            stroke="var(--primary)"
+                            fill="var(--primary)"
+                            fillOpacity="0.2"
+                            strokeWidth="1"
+                            strokeOpacity="0.4"
+                            dot={false}
+                        />
                     </AreaChart>
                 </ChartContainer>
-            </div>
-            <div>
-                <div>
-                    <Button
-                        className="w-full xl:w-auto"
-                        variant="link" onClick={() => window.open(`https://sparkscan.io/token/${tokenMetadata.identifier}?network=${network}`, '_blank')}>
-                        <ExternalLink />
-                        View more details on explorer
-                    </Button>
-                </div>
             </div>
         </div>
     )

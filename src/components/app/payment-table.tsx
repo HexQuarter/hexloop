@@ -93,7 +93,7 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                                 </TooltipContent>
                             </Tooltip>
                         }
-                        {row.original.settlement_mode && receipts.find(r => r.paymentId == row.original.id) && 
+                        {row.original.settlement_mode && receipts.find(r => r.paymentId == row.original.id) &&
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <span className="text-xs text-slate-600 bg-primary/20 pl-2 pr-2 pt-1 pb-1 rounded items-center flex">Minted</span>
@@ -103,15 +103,15 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                                 </TooltipContent>
                             </Tooltip>
                         }
-                        {!row.original.settlement_mode && 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span className="text-xs text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>{`Payment is not yet settled. A settlement transaction is required to finalize this payment.`}</p>
-                            </TooltipContent>
-                        </Tooltip>}
+                        {!row.original.settlement_mode &&
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs text-yellow-500 bg-yellow-500/20 pl-2 pr-2 pt-1 pb-1 rounded">Pending</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{`Payment is not yet settled. A settlement transaction is required to finalize this payment.`}</p>
+                                </TooltipContent>
+                            </Tooltip>}
                     </div >
                 )
             }
@@ -203,8 +203,6 @@ type Props = {
 
 export const PaymentTable: React.FC<Props> = ({ data, onRemove, onClaim, onDeriveReceipt, paymentRequests, receipts }) => {
     return (
-        <div>
-            <DataTable columns={getColumns(onRemove, onClaim, onDeriveReceipt, paymentRequests, receipts)} data={data} />
-        </div>
+        <DataTable columns={getColumns(onRemove, onClaim, onDeriveReceipt, paymentRequests, receipts)} data={data} />
     )
 }
