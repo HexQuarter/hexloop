@@ -1,4 +1,6 @@
+import { GithubIcon, Mail, MailCheck, MailQuestion } from 'lucide-react'
 import LogoPng from '../../../public/logo.svg'
+import { IconBrandGithub } from '@tabler/icons-react'
 
 
 export function Footer() {
@@ -11,13 +13,14 @@ export function Footer() {
                 </a>
 
                 <div className="flex items-center gap-10">
-                    {["Documentation", "GitHub", "Contact"].map((label) => (
+                    {[{ content: <IconBrandGithub />, href: "https://github.com/hexquarter/bitlasso"}, {content: <MailQuestion />, href: 'mailto:bitlasso@hexquarter.com'}].map(({ content, href }, i) => (
                         <a
-                            key={label}
-                            href="#"
+                            key={i}
+                            href={href}
+                            target='_blank'
                             className="text-[13px] tracking-wide text-muted-foreground/50 transition-colors duration-300 hover:text-foreground"
                         >
-                            {label}
+                            {content}
                         </a>
                     ))}
                 </div>
