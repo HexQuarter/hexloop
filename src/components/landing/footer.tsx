@@ -1,4 +1,4 @@
-import { GithubIcon, Mail, MailCheck, MailQuestion } from 'lucide-react'
+import { MailQuestion } from 'lucide-react'
 import LogoPng from '../../../public/logo.svg'
 import { IconBrandGithub } from '@tabler/icons-react'
 
