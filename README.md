@@ -3,7 +3,7 @@
 Work becomes value.
 Value returns as opportunity.
 
-HexLoop turns completed work into Bitcoin-anchored receipts that power repeat business.
+BitLasso turns completed work into Bitcoin-anchored receipts that power repeat business.
 
 Each paid project can mint a verifiable work receipt.
 Clients redeem those receipts for discounts on future projects — creating a continuous loop of collaboration.
@@ -15,7 +15,7 @@ Proof of Work becomes Proof of Loyalty.
 Most loyalty systems reward spending.
 Crypto loyalty often rewards speculation.
 
-HexLoop rewards completed work.
+BitLasso rewards completed work.
 
 There is no durable mechanism in B2B relationships to:
   •	Tokenize delivered value
@@ -24,17 +24,17 @@ There is no durable mechanism in B2B relationships to:
   •	Reinforce long-term collaboration
 
 Payments are isolated events.
-HexLoop turns them into recurring relationships.
+BitLasso turns them into recurring relationships.
 
 ## Our value proposition
 
-HexLoop is a non-custodial system that:
+BitLasso is a non-custodial system that:
   •	Generates Bitcoin payment requests
   •	Mints work receipts after payment confirmation
   •	Allows clients to redeem receipts for future discounts
   •	Keeps custody with the issuer and the client
 
-Funds never pass through HexLoop.
+Funds never pass through BitLasso.
 
 This is operational real-world asset (oRWA) infrastructure — grounded in delivered work, not speculation.
 
