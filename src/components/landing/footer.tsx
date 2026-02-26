@@ -5,9 +5,9 @@ export function Footer() {
     return (
         <footer className="border-t border-border/40 px-6 py-16 sm:px-10 md:py-20 lg:px-16">
             <div className="mx-auto flex max-w-[90rem] flex-col gap-10 md:flex-row md:items-center md:justify-between">
-                <a href="#" className="font-serif text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
+                <a href="#" className="font-serif text-xl tracking-tight text-foreground flex items-center gap-2">
                     <img src={LogoPng} className='w-5' />
-                    <span>Tx<span className="text-primary">Loop</span></span>
+                    <span><span className="text-primary">bit</span>lasso</span>
                 </a>
 
                 <div className="flex items-center gap-10">

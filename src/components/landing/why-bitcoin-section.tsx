@@ -62,7 +62,7 @@ export function WhyBitcoinSection() {
               </div>
             </div>
             <div className="p-8 md:p-12">
-              <p className="mb-8 font-mono text-[10px] font-medium tracking-[0.2em] text-primary uppercase">TxLoop</p>
+              <p className="mb-8 font-mono text-[10px] font-medium tracking-[0.2em] text-primary uppercase">bitlasso</p>
               <div className="flex flex-col gap-5">
                 {comparison.bitlasso.map((item) => (
                   <div key={item} className="flex items-center gap-4">
