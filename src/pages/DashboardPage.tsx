@@ -328,17 +328,21 @@ export const DashboardPage = () => {
         }
     }
 
-    const tokensData: any[] = []
-    if (tokenBalances) {
-        for (let [_, val] of tokenBalances) {
-            tokensData.push({
-                id: val.tokenMetadata.identifier,
-                name: val.tokenMetadata.name,
-                symbol: val.tokenMetadata.symbol,
-                amount: Number(val.balance) / (10 ** val.tokenMetadata.decimals)
-            })
+    const tokensData = useMemo(() => {
+        const tokensData: any[] = []
+        if (tokenBalances) {
+            for (let [_, val] of tokenBalances) {
+                tokensData.push({
+                    id: val.tokenMetadata.identifier,
+                    name: val.tokenMetadata.name,
+                    symbol: val.tokenMetadata.symbol,
+                    amount: Number(val.balance) / (10 ** val.tokenMetadata.decimals)
+                })
+            }
         }
-    }
+        return tokensData
+
+    }, [tokenBalances])
 
     const revenuePayments = useMemo(() => {
         return paymentRequests
