@@ -166,6 +166,12 @@ export const DashboardPage = () => {
     const refreshPaymentRequests = async () => {
         if (!wallet) return
         const paymentRequests = await fetchPaymentsRequest(wallet)
+        if (paymentRequests.length > 0) {
+            const last = paymentRequests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).at(0)
+            if (last) {
+                localStorage.setItem("BITLASSO_PAYMENT_NONCE", last.nonce.toString())
+            }
+        }
 
         const claimableRequests = await Promise.all(paymentRequests.map(async (r) => {
             const requestSdk = await wallet.withAccountNumber(r.nonce)
@@ -183,8 +189,6 @@ export const DashboardPage = () => {
         }))
 
         setPaymentRequests(claimableRequests)
-
-        localStorage.setItem("BITLASSO_PAYMENT_NONCE", paymentRequests.length.toString())
     }
 
     const refreshReceipts = async () => {
@@ -250,21 +254,9 @@ export const DashboardPage = () => {
         await send(wallet, asset, data.feeBTC, 'spark1pgssx7lqr7akm7ycnn9hxux0mq7q8thvht3dec4ctuwvcht9pdj3qed82tfs7p', "spark")
 
         const nonce = Number(localStorage.getItem('BITLASSO_PAYMENT_NONCE') || '0') + 1
-        const { id, createdAt } = await publishPaymentRequest(wallet, nonce, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
-        setPaymentRequests((prev) => [{
-            id: id,
-            amount: data.amount,
-            description: data.description,
-            createdAt: new Date(createdAt * 1000),
-            settleTx: undefined,
-            discountRate: data.discountRate,
-            redeemAmount: undefined,
-            redeemTx: undefined,
-            claimable: 0,
-            nonce: nonce
-        }, ...prev])
+        await publishPaymentRequest(wallet, nonce, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
+        await refreshPaymentRequests()
 
-        localStorage.setItem('BITLASSO_PAYMENT_NONCE', nonce.toString())
         toast.success('Payment request created successfully')
     }
 
