@@ -142,7 +142,7 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                             settleTxUrl = `https://sparkscan.io/tx/${settleTx}`
                             break
                         case "btc":
-                            settleTxUrl = `https://www.blockchain.com/explorer/transactions/btc/${settleTxUrl}`
+                            settleTxUrl = `https://www.blockchain.com/explorer/transactions/btc/${settleTx}`
                             break
                         default:
                             return <></>
@@ -181,6 +181,7 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
                             {settleTxUrl && <DropdownMenuItem onClick={() => window.open(settleTxUrl, '_blank')}>Open settlement transaction <ExternalLink /></DropdownMenuItem>}
                             {redeemTxUrl && <DropdownMenuItem onClick={() => window.open(redeemTxUrl, '_blank')}>Open redeem transaction <ExternalLink /></DropdownMenuItem>}
                             {derivedReceipt && <DropdownMenuItem onClick={() => window.open(deriveReceiptTx, '_blank')}>Open receipt mint transaction <ExternalLink /></DropdownMenuItem>}
+                            {row.original.settleTx && <DropdownMenuItem onClick={() => window.open(`#/payment/${row.original.id}/certificate`, '_blank')}>Open payment certificate<ExternalLink /></DropdownMenuItem>}
                             <DropdownMenuItem onClick={() => onRemove(row.original.id)}>Remove <CircleMinus /></DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -190,7 +191,6 @@ const getColumns = (onRemove: (id: string) => void, onClaim: (id: string) => Pro
 
     ] as ColumnDef<Payment>[]
 }
-
 
 type Props = {
     data: Payment[]

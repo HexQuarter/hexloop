@@ -5,6 +5,7 @@ import { WalletProvider } from "./hooks/use-wallet"
 import { Toaster } from "sonner"
 import { PaymentPage } from "./pages/PaymentPage"
 import { useEffect, useRef } from "react"
+import { CertPage } from "./pages/CertPage"
 
 function ScrollToAnchor() {
     const location = useLocation();
@@ -21,7 +22,7 @@ function ScrollToAnchor() {
             setTimeout(() => {
                 document
                     .getElementById(lastHash.current)
-                    ?.scrollIntoView({ behavior: 'smooth', block: 'center',  });
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center', });
                 lastHash.current = '';
             }, 100);
         }
@@ -41,6 +42,7 @@ export const Root = () => {
                     </WalletProvider>
                 } />
                 <Route path='/payment/:id' Component={PaymentPage} />
+                <Route index path='/payment/:id/certificate' Component={CertPage} />
             </Routes>
             <Toaster />
             <ScrollToAnchor />
