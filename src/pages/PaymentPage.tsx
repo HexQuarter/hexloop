@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { confirmRedeem, fetchPaymentRequest, getPaymentPrice, type PaymentRequest } from "@/lib/api"
+import { confirmRedeem, getPaymentPrice,  } from "@/lib/api"
 import { shortenAddress, sparkBech32ToHex } from "@/lib/utils"
 import { Wallet } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
@@ -13,6 +13,7 @@ import { AddressPurpose, getProviders, request, RpcErrorCode } from "sats-connec
 import { toast } from "sonner"
 
 import LogoPng from '../../public/logo.svg'
+import { fetchPaymentRequest, type PaymentRequest } from "@/lib/nostr"
 
 function formatTime(seconds: number) {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -34,6 +35,7 @@ export const PaymentPage: React.FC = () => {
     const [availableWallet, setAvailableWallet] = useState<boolean>(false)
     const [fetchError, setFetchError] = useState<string>("")
     const [fetchErrorDetails, setFetchErrorDetails] = useState<string>("")
+    const [loadingTokens, setLoadingTokens] = useState(false)
 
     const [redeemLoading, setRedeemLoading] = useState(false)
     const [redeeemError, setRedeemError] = useState<undefined | string>(undefined)
@@ -69,7 +71,7 @@ export const PaymentPage: React.FC = () => {
         if (id && !completed && !paymentRequest) {
             fetchPaymentRequest(id).then(async (paymentRequest) => {
                 setLoading(false)
-                if (paymentRequest.settled_tx) {
+                if (paymentRequest.settleTx) {
                     setCompleted(true)
                     setFetchError("Payment request already fullfilled.")
                     setFetchErrorDetails("The payment associated with this request has already been received and processed. If you believe this is an error, please contact the merchant for assistance.")
@@ -92,22 +94,22 @@ export const PaymentPage: React.FC = () => {
 
     useEffect(() => {
         if (!paymentRequest) return
-        if (paymentRequest.settled_tx) {
+        if (paymentRequest.settleTx) {
             setCompleted(true)
             return
         }
 
-        setPaymentAddress(paymentRequest.spark_address)
+        setPaymentAddress(paymentRequest.sparkAddress)
 
-        if (paymentRequest.redeem_amount) {
-            setAlreadyRedeemedTokens(paymentRequest.redeem_amount)
-            paymentRequest.amount -= paymentRequest.redeem_amount
+        if (paymentRequest.redeemAmount) {
+            setAlreadyRedeemedTokens(paymentRequest.redeemAmount)
+            paymentRequest.amount -= paymentRequest.redeemAmount
             setPaymentRequest(paymentRequest)
         }
 
         const interval = setInterval(async () => {
             const request = await fetchPaymentRequest(paymentRequest.id)
-            if (request.settled_tx) {
+            if (request.settleTx) {
                 setPaymentReceived(true)
                 clearInterval(interval)
             }
@@ -140,12 +142,14 @@ export const PaymentPage: React.FC = () => {
 
         setWallet(address);
 
+        setLoadingTokens(true)
+
         const sparkBalance = await request('spark_getBalance', null)
         if (sparkBalance.status == 'error') {
             return
         }
 
-        const tokenIdentifierHex = sparkBech32ToHex(paymentRequest.token_id)
+        const tokenIdentifierHex = sparkBech32ToHex(paymentRequest.tokenId)
         const tokenBalance = sparkBalance.result.tokenBalances.find(tb => tb.tokenMetadata.tokenIdentifier == tokenIdentifierHex)
         if (!tokenBalance) {
             return
@@ -156,6 +160,8 @@ export const PaymentPage: React.FC = () => {
             amount: parseInt(tokenBalance.balance) / (10 ** tokenBalance.tokenMetadata.decimals),
             decimals: tokenBalance.tokenMetadata.decimals
         })
+
+        setLoadingTokens(false)
     }
 
     const handleRedeemTokens = async () => {
@@ -165,7 +171,7 @@ export const PaymentPage: React.FC = () => {
 
         const response = await request("spark_transferToken", {
             receiverSparkAddress: "spark1pgssyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszykl0d2", // Proof of Burn address
-            tokenIdentifier: paymentRequest.token_id,
+            tokenIdentifier: paymentRequest.tokenId,
             tokenAmount: redeemedTokens
         });
         if (response.status == 'error') {
@@ -183,7 +189,7 @@ export const PaymentPage: React.FC = () => {
         await confirmRedeem(paymentRequest.id, txId)
         setRedeemLoading(false)
 
-        paymentRequest.redeem_amount = redeemedTokens
+        paymentRequest.redeemAmount = redeemedTokens
         setPaymentRequest(paymentRequest)
         toast.success('Token have been burnt and are redeemed. You can proceed to the payment with the discount applied')
     }
@@ -226,7 +232,7 @@ export const PaymentPage: React.FC = () => {
         setPaymentAddress(address)
     }
 
-    const maxRedeemable = paymentRequest && !paymentRequest.redeem_amount ? paymentRequest.amount * (paymentRequest.discount_rate / 100) : 0
+    const maxRedeemable = paymentRequest && !paymentRequest.redeemAmount ? paymentRequest.amount * (paymentRequest.discountRate / 100) : 0
     const maxRedeemableToken = Math.floor(Math.max(0, maxRedeemable))
 
     return (
@@ -235,8 +241,8 @@ export const PaymentPage: React.FC = () => {
                 <div className="text-2xl mb-5 flex flex-col lg:flex-row justify-between items-center">
                     <a href='/'>
                         <div className='flex items-center gap-2'>
-                            <img src={LogoPng} className='w-5' />
-                            <div className='font-serif text-lg tracking-tight text-foreground flex items-center'>
+                            <img src={LogoPng} className='w-10' />
+                            <div className='font-serif text-4xl tracking-tight text-foreground flex items-center'>
                                 <span className='text-primary'>bit</span>
                                 lasso
                             </div>
@@ -249,11 +255,11 @@ export const PaymentPage: React.FC = () => {
                     <Card className="lg:p-10">
                         <CardHeader>
                             {loading && <p className="flex items-center gap-2 text-primary text-sm">Fetching payment details... <Spinner /></p>}
-                            {!loading && fetchError && <h1 className="text-3xl text-black font-serif">{fetchError}</h1>}
+                            {!loading && fetchError && <h1 className="text-4xl text-black font-serif">{fetchError}</h1>}
                             {!loading && paymentReceived && <p className="text-3xl">Payment received</p>}
                         </CardHeader>
                         <CardContent className="flex flex-col lg:flex-row">
-                            {!loading && fetchErrorDetails && <p className="text-sm text-gray-500">{fetchErrorDetails}</p>}
+                            {!loading && fetchErrorDetails && <p className="text-gray-500">{fetchErrorDetails}</p>}
                             {!loading && paymentReceived &&
                                 <div className="flex flex-col gap-5">
                                     <p className="text-2xl text-primary">Congratulations !</p>
@@ -292,13 +298,13 @@ export const PaymentPage: React.FC = () => {
                                                     </div>}
                                                 {availableWallet && !wallet &&
                                                     <div className="flex flex-col gap-2 mt-5">
-                                                        <Button size='sm' className='text-xs' onClick={connectWallet}>Connect XVerse to redeem tokens.</Button>
+                                                        <Button className='text-xs' variant='outline' onClick={connectWallet}>Connect your XVerse wallet to redeem tokens.</Button>
                                                     </div>
                                                 }
                                                 {availableWallet && wallet &&
                                                     <div className="mt-2 flex flex-col gap-2">
                                                         <span className="text-xl">Loyalty discount</span>
-                                                        {tokenBalance &&
+                                                        {!loadingTokens && tokenBalance &&
                                                             <div className="flex flex-col gap-2 text-muted-foreground">
                                                                 <div>
                                                                     <p className="text-sm">You have {tokenBalance.amount} <strong>{tokenBalance.name}</strong> tokens.</p>
@@ -314,11 +320,12 @@ export const PaymentPage: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                         }
-                                                        {!tokenBalance &&
+                                                        {!loadingTokens && !tokenBalance &&
                                                             <div>
                                                                 <p className="text-sm">You dont'have tokens to redeem for that payment.</p>
                                                             </div>
                                                         }
+                                                        {loadingTokens && <p className="flex items-center gap-1 text-xs text-muted-foreground"><span>Fetching token balance</span> <Spinner /></p>}
                                                     </div>
                                                 }
                                             </div>
@@ -328,7 +335,7 @@ export const PaymentPage: React.FC = () => {
                                                 <span className="text-xl">Loyalty discount</span>
                                                 <div className="flex flex-col gap-3 items-start text-muted-foreground">
                                                     <p className="text-sm">A discount have been already applied after redeeming of {alreadyRedeemedTokens} tokens.</p>
-                                                    <Button variant='link' className='text-sm p-0 h-0' onClick={() => window.open(`https://sparkscan.io/tx/${paymentRequest.redeem_tx}`, '_blank')}>Check out transaction</Button>
+                                                    <Button variant='link' className='text-sm p-0 h-0' onClick={() => window.open(`https://sparkscan.io/tx/${paymentRequest.redeemTx}`, '_blank')}>Check out transaction</Button>
                                                 </div>
                                             </div>
                                         }
@@ -348,9 +355,9 @@ export const PaymentPage: React.FC = () => {
                                         </div>}
                                         <p className="text-sm text-gray-500">Select a payment method to proceed with your transaction.</p>
                                         <TabsReceive
-                                            btcAddress={paymentRequest.btc_address}
-                                            sparkAddress={paymentRequest.spark_address}
-                                            lnAddress={paymentRequest.ln_address}
+                                            btcAddress={paymentRequest.btcAddress}
+                                            sparkAddress={paymentRequest.sparkAddress}
+                                            lnAddress={paymentRequest.lnAddress}
                                             onTabChange={handleSelectPaymentChange}
                                             amount={btcAmount}
                                         />

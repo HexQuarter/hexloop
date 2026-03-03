@@ -5,52 +5,22 @@ import { Auth } from './Auth.tsx'
 import { SiteHeader } from '@/components/app/site-header.tsx'
 import { useWallet } from './hooks/use-wallet.tsx'
 import { Spinner } from "@/components/ui/spinner"
-import { authenticateUser, checkSessionValidity } from './lib/api.ts'
 
 export const AppRoot = () => {
   const { wallet, walletExists } = useWallet()
   const [connected, setConnected] = useState(false)
-  const [requireRegister, setRequireRegister] = useState(false)
 
   useEffect(() => {
     if (walletExists) {
-      const token = localStorage.getItem('BITLASSO_SESSION_TOKEN')
-
-      if (token) {
-        checkSessionValidity(token)
-          .then(() => { setConnected(true) })
-          .catch(() => {
-            const mnemonic = localStorage.getItem('BITLASSO_MNEMONIC')
-
-            if (mnemonic) {
-              authenticateUser(mnemonic)
-                .then(({ token, expiresAt }) => {
-                  localStorage.setItem('BITLASSO_SESSION_TOKEN', token)
-                  localStorage.setItem('BITLASSO_SESSION_EXPIRES_AT', expiresAt.toString())
-                  setConnected(true)
-                })
-                .catch((e: Error) => {
-                  setConnected(false)
-                  if (e.message == 'ACCOUNT_NOT_FOUND') {
-                    setRequireRegister(true)
-                    return
-                  }
-                })
-            }
-            else {
-              setConnected(false)
-            }
-          })
-      }
-      else {
-        setRequireRegister(true)
-        setConnected(false)
-      }
+      setConnected(true)
+    }
+    else {
+      setConnected(false)
     }
   }, [walletExists])
 
   // show spinner while wallet check / effect is running
-  if (((walletExists || wallet) && !connected) && !requireRegister) {
+  if (((walletExists || wallet) && !connected)) {
     return (
       <div className='flex text-primary items-center justify-center h-screen'>
         <Spinner className='size-8' />
@@ -58,7 +28,7 @@ export const AppRoot = () => {
     )
   }
 
-  if (requireRegister || (!wallet && !connected)) {
+  if ((!wallet && !connected)) {
     console.log('auth', wallet, connected)
     return <Auth />
   }

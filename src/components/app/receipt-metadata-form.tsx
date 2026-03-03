@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -32,7 +32,7 @@ export const ReceiptMetadataForm: React.FC<Props> = ({ metadata, onSubmit, onClo
     const [recipientAddress, _setRecipientAddress] = useState(metadata.recipientAddress || '')
     const [paymentId, setPaymentId] = useState(metadata.paymentId || undefined)
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = useCallback(async (e: FormEvent) => {
         e.preventDefault()
         setLoading(true)
         let newMetadata = metadata
@@ -43,7 +43,7 @@ export const ReceiptMetadataForm: React.FC<Props> = ({ metadata, onSubmit, onClo
         await onSubmit(newMetadata)
         setLoading(false)
         setOpen(false)
-    }
+    }, [metadata, description, recipientAddress, paymentId])
 
     useEffect(() => {
         if (!open) onClose()
@@ -89,7 +89,7 @@ export const ReceiptMetadataForm: React.FC<Props> = ({ metadata, onSubmit, onClo
                                     <SelectTrigger className="w-full"><SelectValue placeholder="Select a payment request" /></SelectTrigger>
                                     <SelectContent>
                                         {paymentRequests.map((p, i) => (
-                                            <SelectItem key={i} value={p.id}>{new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(p.amount)} on {p.created_at.toLocaleDateString()}</SelectItem>
+                                            <SelectItem key={i} value={p.id}>{new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(p.amount)} on {p.createdAt.toLocaleDateString()}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

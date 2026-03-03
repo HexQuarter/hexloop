@@ -12,6 +12,9 @@ import init, {
     getSparkStatus
 } from "@breeztech/breez-sdk-spark/web";
 import { Network, SparkWallet } from "@buildonspark/spark-sdk";
+import { getNostrKeyPair, type NostrKeyPair } from "./nostr";
+import { finalizeEvent, type EventTemplate, type VerifiedEvent } from "nostr-tools";
+import { hexToBytes } from "nostr-tools/utils";
 
 export type TokenMetadata = {
     identifier: string;
@@ -35,7 +38,7 @@ export type Balance = {
 
 export type SparkPayment = Payment
 
-export interface Wallet {
+interface _SparkWallet {
     getNetwork(): string
     getSparkAddress: () => Promise<string>;
     getBitcoinAddress: () => Promise<string>;
@@ -61,8 +64,15 @@ export interface Wallet {
     listUnclaimDeposits(): Promise<Deposit[]>
     claimDeposit(txId: string, vout: number): Promise<void>
     validAddress(string: string, method?: 'spark' | 'lightning' | 'bitcoin'): Promise<boolean>
-    sparkStatus(): Promise<{ active: boolean, status: string}>
+    sparkStatus(): Promise<{ active: boolean, status: string }>
 }
+
+interface NostrWallet {
+    getNostrPublicKey(): string
+    signNostrEvent(event: EventTemplate): VerifiedEvent
+}
+
+export type Wallet = _SparkWallet & NostrWallet
 
 let wasmInit: Promise<void> | null = null;
 
@@ -87,7 +97,6 @@ class TypedEventEmitter<Events extends EventMap> {
     }
 }
 
-
 interface SparkEvent {
     synced: () => void;
     unclaimedDeposits: (unclaimedDeposits: DepositInfo[]) => void;
@@ -104,6 +113,7 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
     private builderNewFn: () => Promise<SdkBuilder>;
     private builderSparkWalletFn: (accountNumber: number) => Promise<SparkWallet>
     public network: Network;
+    private nostrKeypair: NostrKeyPair | undefined;
 
     constructor(builderNewFn: () => Promise<SdkBuilder>, builderSparkWalletFn: (accountNumber: number) => Promise<SparkWallet>, sdk: BreezSdk, sparkWallet: SparkWallet, network: Network) {
         super()
@@ -222,6 +232,8 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
         catch (e) {
             console.error('cannot claim deposit')
         }
+
+        instance.nostrKeypair = getNostrKeyPair(mnemonic)
 
         return instance;
     }
@@ -480,8 +492,6 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
                     amount: amountSats ? BigInt(amountSats) : undefined
                 })
 
-                console.log(prepareResponse)
-
                 if (prepareResponse.paymentMethod.type == 'bitcoinAddress') {
                     const feeQuote = prepareResponse.paymentMethod.feeQuote.speedMedium;
                     return BigInt(feeQuote.userFeeSat + feeQuote.l1BroadcastFeeSat);
@@ -642,10 +652,24 @@ export class BreezSparkWallet extends TypedEventEmitter<SparkEvent> implements W
         }
     }
 
-    async sparkStatus(): Promise<{ active: boolean, status: string}> {
+    async sparkStatus(): Promise<{ active: boolean, status: string }> {
         const sparkStatus = await getSparkStatus()
         console.log('spark status', sparkStatus)
         return { active: sparkStatus.status == 'operational' || sparkStatus.status == 'degraded', status: sparkStatus.status }
+    }
+
+    getNostrPublicKey(): string {
+        if (!this.nostrKeypair) {
+            throw new Error("Nost wallet undefined")
+        }
+        return this.nostrKeypair.pub
+    }
+
+    signNostrEvent(event: EventTemplate): VerifiedEvent {
+        if (!this.nostrKeypair) {
+            throw new Error("Nost wallet undefined")
+        }
+        return finalizeEvent(event, hexToBytes(this.nostrKeypair.priv))
     }
 }
 

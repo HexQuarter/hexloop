@@ -138,7 +138,7 @@ export const IssueReceiptForm: React.FC<Props> = ({ onSubmit, paymentRequests, b
                                     <SelectTrigger className="w-full"><SelectValue placeholder="Select a payment request" /></SelectTrigger>
                                     <SelectContent>
                                         {paymentRequests.map((p, i) => (
-                                            <SelectItem key={i} value={p.id}>{new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(p.amount)} on {p.created_at.toLocaleDateString()}</SelectItem>
+                                            <SelectItem key={i} value={p.id}>{new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(p.amount)} on {p.createdAt.toLocaleDateString()}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

@@ -57,10 +57,8 @@ export function SiteHeader() {
   }, [wallet])
 
   const logout = () => {
-    localStorage.removeItem('BITLASSO_NOSTRKEYPAIR')
     localStorage.removeItem('BITLASSO_MNEMONIC')
-    localStorage.removeItem('BITLASSO_SESSION_TOKEN')
-    localStorage.removeItem('BITLASSO_SESSION_EXPIRES_AT')
+    localStorage.removeItem('BITLASSO_NONCE')
     navigate('/', { replace: true })
   }
 

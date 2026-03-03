@@ -5,12 +5,11 @@ import { PassphraseForm } from "@/components/app/passphrase-form";
 import { CreateWalletForm } from "@/components/app/create-wallet-form";
 import { useNavigate } from "react-router";
 import { useWallet } from "@/hooks/use-wallet";
-import { authenticateUser } from "@/lib/api";
 import { ArrowRight } from "lucide-react";
 
 import LogoPng from '../../public/logo.svg'
 import type { NotificationSettings } from "@/components/app/notification-setting";
-import { getNostrKeyPair, registerNotifSettings } from "@/lib/nostr";
+import { registerNotifSettings } from "@/lib/nostr";
 
 export const LoginPage = () => {
     const { storeWallet } = useWallet()
@@ -23,14 +22,8 @@ export const LoginPage = () => {
         setLoading(true)
         console.log('authenticating user...')
 
-        const nostrKeyPair = getNostrKeyPair(mnemonic)
-        await registerNotifSettings(nostrKeyPair, notifSettings)
-
-        const { token, expiresAt } = await authenticateUser(mnemonic)
-        localStorage.setItem('BITLASSO_SESSION_TOKEN', token)
-        localStorage.setItem('BITLASSO_SESSION_EXPIRES_AT', expiresAt.toString())
-        localStorage.setItem('BITLASSO_NOSTRKEYPAIR', JSON.stringify(nostrKeyPair))
-        await storeWallet(mnemonic)
+        const wallet = await storeWallet(mnemonic)
+        await registerNotifSettings(wallet, notifSettings)
 
         setLoading(false)
         navigate('/app/dashboard', { replace: true })

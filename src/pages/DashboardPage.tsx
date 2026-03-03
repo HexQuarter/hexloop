@@ -11,7 +11,6 @@ import { IssueReceiptForm, type IssueReceiptData } from "@/components/app/issue-
 import { PaymentRequestForm, type PaymentRequestData } from "@/components/app/payment-request"
 import { ReceiptTable, type Receipt } from "@/components/app/receipt-table"
 import { type SparkPayment, type TokenBalanceMap, type TokenMetadata, type TokenTransaction, type Wallet } from "@/lib/wallet"
-import { createPaymentRequest, deletePaymentRequest, fetchPaymentRequest, fetchPaymentRequests, fetchReceiptMetadata, patchReceiptMetadata } from "@/lib/api"
 import { PaymentTable, type Payment } from "@/components/app/payment-table"
 import type { Asset } from "@/components/app/send"
 import { send } from "@/lib/utils"
@@ -21,6 +20,8 @@ import { Coins, ExternalLink, FileText, MoreHorizontal, Pickaxe, RefreshCcw, Roc
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { RevenueChart } from "@/components/app/revenue-chart"
+import { fetchPaymentsRequest, listReceipts, publishPaymentRequest, publishReceiptMetadata, removePaymentRequest } from "@/lib/nostr"
+import { Spinner } from "@/components/ui/spinner"
 
 export const DashboardPage = () => {
     const { wallet } = useWallet()
@@ -47,7 +48,7 @@ export const DashboardPage = () => {
         }
     }
 
-    const updateStats = async (wallet: Wallet, metadata: TokenMetadata) => {
+    const refreshIssuanceStats = async (wallet: Wallet, metadata: TokenMetadata) => {
         let payments: TokenTransaction[] = []
         let offset = 0
         const pageSize = 10
@@ -127,7 +128,7 @@ export const DashboardPage = () => {
                 const metadata = await wallet.getTokenMetadata()
                 if (metadata) {
                     setTokenMetadata(metadata)
-                    await updateStats(wallet, metadata)
+                    await refreshIssuanceStats(wallet, metadata)
                 }
             }
             catch (e: any) { }
@@ -141,11 +142,12 @@ export const DashboardPage = () => {
                 setWalletHistory(payments)
 
                 if (tokenMetadata) {
-                    await updateStats(wallet, tokenMetadata)
+                    await refreshIssuanceStats(wallet, tokenMetadata)
                 }
             })
 
             await refreshPaymentRequests()
+            await refreshReceipts()
 
             setInterval(async () => {
                 const prices = await wallet.fetchPrices()
@@ -155,9 +157,7 @@ export const DashboardPage = () => {
                 }
             }, 60_000)
 
-            setTimeout(() => {
-                setInitializing(false)
-            }, 800);
+            setInitializing(false)
         }
 
         fetchData()
@@ -165,9 +165,9 @@ export const DashboardPage = () => {
 
     const refreshPaymentRequests = async () => {
         if (!wallet) return
-        const paymentRequests = await fetchPaymentRequests()
+        const paymentRequests = await fetchPaymentsRequest(wallet)
 
-        const requests = await Promise.all(paymentRequests.map(async (r) => {
+        const claimableRequests = await Promise.all(paymentRequests.map(async (r) => {
             const requestSdk = await wallet.withAccountNumber(r.nonce)
 
             const unclaimedBitcoinDepostis = await requestSdk.listUnclaimDeposits()
@@ -178,54 +178,21 @@ export const DashboardPage = () => {
             let balance = await requestSdk.getBalance()
             let satsBalance = Number(balance.balance)
 
-            return {
-                created_at: new Date(r.created_at * 1000),
-                amount: r.amount,
-                discount_rate: r.discount_rate,
-                id: r.id,
-                description: r.description,
-                settle_tx: r.settled_tx,
-                redeem_amount: r.redeem_amount,
-                redeem_tx: r.redeem_tx,
-                claimable: satsBalance / 100_000_000,
-                nonce: r.nonce,
-                settlement_mode: r.settlement_mode
-            } as Payment
+            r.claimable = satsBalance / 100_000_000
+            return r
         }))
 
-        setPaymentRequests(requests)
+        setPaymentRequests(claimableRequests)
+
+        localStorage.setItem("BITLASSO_PAYMENT_NONCE", paymentRequests.length.toString())
     }
 
-    useEffect(() => {
-        const fetchDetailedReceipt = async () => {
-            const promises = issuanceStats.filter(r => r.type == 'mint').map(d => {
-                return fetchReceiptMetadata(d.tx).then(metadata => {
-                    let receipt: Receipt = {
-                        date: d.date,
-                        amount: d.amount,
-                        transaction: d.tx,
-                    }
-                    if (metadata) {
-                        receipt.description = metadata.description
-                        receipt.recipient = metadata.recipient
+    const refreshReceipts = async () => {
+        if (!wallet) return
 
-                        const paymentInfo = paymentRequests.find(p => p.id == metadata.payment_id)
-                        if (paymentInfo) {
-                            receipt.paymentId = paymentInfo.id
-                        }
-                    }
-                    return receipt
-                })
-            })
-
-            setReceipts(await Promise.all(promises))
-        }
-
-        if (issuanceStats.length > 0) {
-            fetchDetailedReceipt()
-        }
-
-    }, [issuanceStats, paymentRequests])
+        const receipts = await listReceipts(wallet)
+        setReceipts(receipts)
+    }
 
     const handleNewToken = async ({ name, symbol }: { name: string, symbol: string }) => {
         console.log('Creating token', name, symbol)
@@ -248,22 +215,31 @@ export const DashboardPage = () => {
     }
 
     const handleIssueReceipt = async (data: IssueReceiptData) => {
+        if (!wallet) return
+
         const response = await wallet?.mintTokens(BigInt(data.mintableTokens) * BigInt(10 ** tokenMetadata!.decimals))
         if (!response) return
         console.log('Issued receipt with tx ID:', response?.id)
 
-        await updateStats(wallet!, tokenMetadata!)
-        await patchReceiptMetadata(response?.id, data.description || '', JSON.stringify({ name: data.recipientName || '', address: data.recipientAddress || '' }), data.paymentId)
+        await publishReceiptMetadata(wallet,
+            response?.id,
+            data.mintableTokens,
+            response.timestamp,
+            data.description || '',
+            JSON.stringify({ name: data.recipientName || '', address: data.recipientAddress || '' }),
+            data.paymentId
+        )
 
-        setIssuanceStats((prevStats) => [
+        setReceipts((prevReceipts) => [
             {
                 date: response.timestamp,
                 amount: data.mintableTokens,
-                transfers: 0,
-                type: 'mint',
-                tx: response.id
+                description: data.description,
+                recipient: JSON.stringify({ name: data.recipientName || '', address: data.recipientAddress || '' }),
+                paymentId: data.paymentId,
+                transaction: response.id
             },
-            ...prevStats
+            ...prevReceipts
         ])
     }
 
@@ -273,25 +249,29 @@ export const DashboardPage = () => {
         const asset = { name: "Bitcoin", symbol: "BTC", max: 0 }
         await send(wallet, asset, data.feeBTC, 'spark1pgssx7lqr7akm7ycnn9hxux0mq7q8thvht3dec4ctuwvcht9pdj3qed82tfs7p', "spark")
 
-        const { paymentRequestId } = await createPaymentRequest(wallet, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
-        const paymentRequest = await fetchPaymentRequest(paymentRequestId)
+        const nonce = Number(localStorage.getItem('BITLASSO_PAYMENT_NONCE') || '0') + 1
+        const { id, createdAt } = await publishPaymentRequest(wallet, nonce, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
         setPaymentRequests((prev) => [{
-            id: paymentRequestId,
+            id: id,
             amount: data.amount,
-            description: paymentRequest.description,
-            created_at: new Date(paymentRequest.created_at * 1000),
-            settled_tx: undefined,
-            discount_rate: paymentRequest.discount_rate,
-            redeem_amount: undefined,
-            redeem_tx: undefined,
+            description: data.description,
+            createdAt: new Date(createdAt * 1000),
+            settleTx: undefined,
+            discountRate: data.discountRate,
+            redeemAmount: undefined,
+            redeemTx: undefined,
             claimable: 0,
-            nonce: paymentRequest.nonce
+            nonce: nonce
         }, ...prev])
+
+        localStorage.setItem('BITLASSO_PAYMENT_NONCE', nonce.toString())
         toast.success('Payment request created successfully')
     }
 
     const handleRemovePaymentRequest = async (id: string) => {
-        await deletePaymentRequest(id)
+        if (!wallet) return
+
+        await removePaymentRequest(wallet, id)
         setPaymentRequests((prev) => prev.filter(r => r.id !== id))
     }
 
@@ -313,19 +293,19 @@ export const DashboardPage = () => {
     }
 
     const handleReceiptMetadataChange = async (data: ReceiptMetadataData) => {
-        await patchReceiptMetadata(data.transactionId, data.description, JSON.stringify({ name: data.recipientName, address: data.recipientAddress }), data.paymentId)
-        const metadata = await fetchReceiptMetadata(data.transactionId)
-        if (metadata) {
-            const newReceipts = receipts.map(r => {
-                if (r.transaction == data.transactionId) {
-                    r.description = metadata.description
-                    r.recipient = metadata.recipient,
-                        r.paymentId = metadata.paymentId
-                }
-                return r
-            })
-            setReceipts(newReceipts)
-        }
+        if (!wallet) return
+
+        const { amount } = receipts.find(r => r.transaction == data.transactionId) as Receipt
+        await publishReceiptMetadata(wallet,
+            data.transactionId,
+            amount,
+            new Date(),
+            data.description,
+            JSON.stringify({ name: data.recipientName, address: data.recipientAddress }),
+            data.paymentId
+        )
+
+        await refreshReceipts()
     }
 
     const tokensData = useMemo(() => {
@@ -346,26 +326,26 @@ export const DashboardPage = () => {
 
     const revenuePayments = useMemo(() => {
         return paymentRequests
-            .filter(p => p.settle_tx !== undefined)
+            .filter(p => p.settleTx !== undefined)
             .reduce<{ date: string, amount: number }[]>((acc, p) => {
                 if (acc.length == 0) {
-                    acc.push({ date: p.created_at.toISOString().split('T')[0], amount: p.amount })
+                    acc.push({ date: p.createdAt.toISOString().split('T')[0], amount: p.amount })
                 }
                 else {
                     const lastItem = acc[acc.length - 1]
-                    acc.push({ date: p.created_at.toISOString().split('T')[0], amount: lastItem.amount + p.amount })
+                    acc.push({ date: p.createdAt.toISOString().split('T')[0], amount: lastItem.amount + p.amount })
                 }
                 return acc
             }, [])
     }, [paymentRequests])
 
     const revenue = useMemo(() => {
-        return paymentRequests.filter(p => p.settle_tx !== undefined).reduce((acc, p) => p.amount + acc, 0)
+        return paymentRequests.filter(p => p.settleTx !== undefined).reduce((acc, p) => p.amount + acc, 0)
     }, [paymentRequests])
 
 
     const pendingPayments = useMemo(() => {
-        return paymentRequests.filter(p => p.settle_tx === undefined).length
+        return paymentRequests.filter(p => p.settleTx === undefined).length
     }, [paymentRequests])
 
     const redeemedTokens = useMemo(() => {
@@ -378,10 +358,10 @@ export const DashboardPage = () => {
                 <div className="flex flex-col gap-5 w-full">
                     <div className="flex flex-col w-full gap-10">
                         <div className="flex flex-col gap-2 justify-between">
-                            <h1 className="text-4xl font-serif font-normal text-foreground">Dashboard</h1>
+                            <h1 className="text-4xl font-serif font-normal text-foreground flex items-center">Dashboard {initializing && <Spinner className="ml-2 text-primary"/>}</h1>
                             <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
                         </div>
-                        {tokenMetadata && initializing &&
+                        {initializing && tokenMetadata &&
                             <div className="grid lg:grid-cols-3 gap-2">
                                 <Card className="col-span-1">
                                     <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
@@ -621,17 +601,17 @@ export const DashboardPage = () => {
                                         <div className="lg:max-w-full max-w-xs">
                                             <PaymentTable
                                                 data={paymentRequests.map(r => ({
-                                                    created_at: r.created_at,
+                                                    createdAt: r.createdAt,
                                                     amount: r.amount,
                                                     description: r.description,
-                                                    settle_tx: r.settle_tx,
-                                                    discount_rate: r.discount_rate,
+                                                    settleTx: r.settleTx,
+                                                    discountRate: r.discountRate,
                                                     id: r.id,
-                                                    redeem_amount: r.redeem_amount,
-                                                    redeem_tx: r.redeem_tx,
+                                                    redeemAmount: r.redeemAmount,
+                                                    redeemTx: r.redeemTx,
                                                     claimable: r.claimable,
                                                     nonce: r.nonce,
-                                                    settlement_mode: r.settlement_mode
+                                                    settlementMode: r.settlementMode
                                                 }))}
                                                 onRemove={handleRemovePaymentRequest}
                                                 onClaim={handleClaimPaymentRequest}
@@ -642,43 +622,45 @@ export const DashboardPage = () => {
                                     }
                                 </CardContent>
                             </Card>
-                            {tokenMetadata && <Card className="lg:col-span-1" id="receipts">
-                                <CardHeader className="flex flex-col">
-                                    <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-10">
-                                        <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-5">
-                                            <p className="text-2xl font-serif text-2xl font-light ">Receipts</p>
-                                            <CardAction >
-                                                {initializing && <Skeleton className="h-10 w-30" />}
-                                                {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
-                                            </CardAction>
-                                        </div>
-                                    </CardTitle>
-                                    <CardDescription>Receipts issued for completed and paid work</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {initializing &&
-                                        <div className="flex flex-col gap-2">
-                                            {Array.from({ length: 5 }).map((_, index) => (
-                                                <div className="flex gap-4" key={index}>
-                                                    <Skeleton className="h-10 flex-1" />
-                                                    <Skeleton className="h-10 flex-1" />
-                                                    <Skeleton className="h-10 flex-1" />
-                                                    <Skeleton className="h-10 flex-1" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    }
-                                    <div className="lg:max-w-full max-w-xs">
-                                        {!initializing &&
-                                            <ReceiptTable
-                                                network={wallet?.getNetwork() as string}
-                                                receipts={receipts}
-                                                paymentRequests={paymentRequests}
-                                                onMetadataChange={handleReceiptMetadataChange} />
+                            {tokenMetadata &&
+                                <Card className="lg:col-span-1" id="receipts">
+                                    <CardHeader className="flex flex-col">
+                                        <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-10">
+                                            <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-5">
+                                                <p className="text-2xl font-serif text-2xl font-light ">Receipts</p>
+                                                <CardAction >
+                                                    {initializing && <Skeleton className="h-10 w-30" />}
+                                                    {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
+                                                </CardAction>
+                                            </div>
+                                        </CardTitle>
+                                        <CardDescription>Receipts issued for completed and paid work</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {initializing &&
+                                            <div className="flex flex-col gap-2">
+                                                {Array.from({ length: 5 }).map((_, index) => (
+                                                    <div className="flex gap-4" key={index}>
+                                                        <Skeleton className="h-10 flex-1" />
+                                                        <Skeleton className="h-10 flex-1" />
+                                                        <Skeleton className="h-10 flex-1" />
+                                                        <Skeleton className="h-10 flex-1" />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         }
-                                    </div>
-                                </CardContent>
-                            </Card>}
+                                        <div className="lg:max-w-full max-w-xs">
+                                            {!initializing &&
+                                                <ReceiptTable
+                                                    network={wallet?.getNetwork() as string}
+                                                    receipts={receipts}
+                                                    paymentRequests={paymentRequests}
+                                                    onMetadataChange={handleReceiptMetadataChange} />
+                                            }
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            }
                         </div>
                     </div>
                 </div>

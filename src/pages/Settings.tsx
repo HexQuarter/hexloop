@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { getNotifSettings, registerNotifSettings, type NostrKeyPair } from "@/lib/nostr"
+import { getNotifSettings, registerNotifSettings } from "@/lib/nostr"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { IconNotification } from "@tabler/icons-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,16 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { SaveAll } from "lucide-react"
+import { useWallet } from "@/hooks/use-wallet"
 
 export const SettingsPage = () => {
+    const { wallet } = useWallet()
     const [initializing, setInitializing] = useState(true)
     const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({ email: '', npub: '' })
 
     useEffect(() => {
+        if (!wallet) return
         const fetchData = async () => {
-            console.log('fetch')
-            const keypair = localStorage.getItem('BITLASSO_NOSTRKEYPAIR') || ''
-            const notif = await getNotifSettings(JSON.parse(keypair) as NostrKeyPair)
+            const notif = await getNotifSettings(wallet)
             if (notif) {
                 setNotificationSettings(notif)
             }
@@ -26,7 +27,7 @@ export const SettingsPage = () => {
         }
 
         fetchData()
-    }, [])
+    }, [wallet])
 
     const handleEmailChange = (val: string) => {
         setNotificationSettings({ email: val, npub: notificationSettings.npub })
@@ -37,8 +38,8 @@ export const SettingsPage = () => {
     }
 
     const handleSave = async () => {
-        const keypair = localStorage.getItem('BITLASSO_NOSTRKEYPAIR') || ''
-        await registerNotifSettings(JSON.parse(keypair) as NostrKeyPair, notificationSettings)
+        if (!wallet) return
+        await registerNotifSettings(wallet, notificationSettings)
     }
 
     return (

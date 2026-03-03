@@ -1,7 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "@/components/ui/data-table"
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { ExternalLink, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -25,7 +25,7 @@ const getColumns = (openMetadataModalFn: (metadata: ReceiptMetadataData) => void
             accessorKey: "date",
             header: "Date",
             cell: ({ row }) => {
-                const date: Date = row.getValue("date")
+                const date: Date = row.original.date
                 return date.toLocaleString()
             }
         },
@@ -37,8 +37,7 @@ const getColumns = (openMetadataModalFn: (metadata: ReceiptMetadataData) => void
             accessorKey: "description",
             header: "Description",
             cell: ({ row }) => {
-                const description: string | null = row.getValue("description")
-                return description ? description : "N/A"
+                return row.original.description || "N/A"
             }
         },
         // {
@@ -74,13 +73,13 @@ const getColumns = (openMetadataModalFn: (metadata: ReceiptMetadataData) => void
             accessorKey: "paymentId",
             header: "Payment",
             cell: ({ row }) => {
-                const paymentId: string | null = row.getValue("paymentId")
+                const paymentId: string | undefined = row.original.paymentId
                 if (paymentId) {
                     const paymentInfo = paymentRequests.find(p => p.id == paymentId)
                     if (!paymentInfo) {
                         return
                     }
-                    const paymentFormat = `${new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(paymentInfo.amount)} on ${paymentInfo.created_at.toLocaleDateString()}`
+                    const paymentFormat = `${new Intl.NumberFormat("en-US", { style: 'currency', currency: 'USD' }).format(paymentInfo.amount)} on ${paymentInfo.createdAt.toLocaleDateString()}`
                     return <span>{paymentFormat}</span>
                 }
             }
@@ -91,7 +90,7 @@ const getColumns = (openMetadataModalFn: (metadata: ReceiptMetadataData) => void
             cell: ({ row }) => {
                 const tx: string = row.original.transaction
 
-                let metadata: ReceiptMetadataData = { transactionId: tx, description: row.original.description }
+                let metadata: ReceiptMetadataData = { transactionId: tx, description: row.original.description, paymentId: row.original.paymentId }
                 // if (row.original.recipient) {
                 //     const { name, address } = JSON.parse(row.original.recipient)
                 //     metadata.recipientName = name
@@ -127,10 +126,10 @@ export const ReceiptTable: React.FC<{ network: string, receipts: Receipt[], paym
     const [openMetadataModal, setOpenMetadataModel] = useState(false)
     const [metadata, setMetadata] = useState<ReceiptMetadataData>({ transactionId: '', description: '', recipientName: '', recipientAddress: undefined, paymentId: undefined })
 
-    const showMetadataModal = (metadata: ReceiptMetadataData) => {
+    const showMetadataModal = useCallback((metadata: ReceiptMetadataData) => {
         setMetadata(metadata)
         setOpenMetadataModel(true)
-    }
+    }, [metadata])
 
     return (
         <div>
