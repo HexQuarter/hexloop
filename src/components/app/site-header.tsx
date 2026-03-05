@@ -25,7 +25,6 @@ export function SiteHeader() {
 
   const { wallet } = useWallet()
 
-  const [status, setStatus] = useState<undefined | { status: string, active: boolean }>({ status: 'degraded', active: false })
   const [sparkAddress, setSparkAddress] = useState("")
 
   const [menuItems, setMenuItems] = useState<NavItemType[]>([
@@ -52,7 +51,6 @@ export function SiteHeader() {
   useEffect(() => {
     if (wallet) {
       wallet.getSparkAddress().then(setSparkAddress)
-      wallet.sparkStatus().then(setStatus)
     } sparkAddress
   }, [wallet])
 
@@ -101,15 +99,6 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-          }
-          {status &&
-            <Tooltip>
-              <TooltipTrigger><div className={`${status.active ? 'bg-green-400' : 'bg-yellow-500'} rounded-full w-2 h-2`}></div></TooltipTrigger>
-              <TooltipContent className="flex flex-col gap-2">
-                <p>Connected to Spark</p>
-                <p>Status: {status.status}</p>
-              </TooltipContent>
-            </Tooltip>
           }
         </div>
       </div>

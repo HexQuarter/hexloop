@@ -38,7 +38,7 @@ export const AppRoot = () => {
       <div className='bg-white px-[2rem] py-5 border-b-5 border-primary/40'>
         <div className='lg:mx-auto md:w-[90%]'><SiteHeader /></div>
       </div>
-      <div className="lg:mx-auto md:w-[90%] min-h-screen justify-center py-10 px-[2rem] flex flex-col">
+      <div className="lg:mx-auto md:w-[90%] min-h-screen py-10 px-[2rem] flex flex-col">
         <App />
       </div>
     </div>
