@@ -7,6 +7,9 @@ const links = [
     { label: "Problem", href: "#problem" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "Why Bitcoin", href: "#why-bitcoin" },
+    { label: "oRWA", href: "#orwa" },
+    { label: "Decentralized", href: "#decentralized" },
+    { label: "Self-custodial", href: "#self-custody"},
     { label: "Pricing", href: "#pricing" },
 ]
 
@@ -64,14 +67,14 @@ export function Navbar() {
                 <div className="mx-6 mt-2 rounded-2xl border border-border/40 bg-card/95 p-6 shadow-lg backdrop-blur-2xl sm:mx-10 md:hidden lg:mx-16">
                     <div className="flex flex-col gap-1">
                         {links.map((l) => (
-                            <a
+                            <Link
                                 key={l.href}
-                                href={l.href}
+                                to={l.href}
                                 onClick={() => setOpen(false)}
                                 className="rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             >
                                 {l.label}
-                            </a>
+                            </Link>
                         ))}
                         <Link
                             to="/app"

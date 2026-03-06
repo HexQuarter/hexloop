@@ -23,7 +23,7 @@ export function OperationalSection() {
   const isInView = useInView(ref, { once: true, margin: "-80px" })
 
   return (
-    <section className="relative overflow-hidden border-t border-border/40 bg-primary/5 px-6 py-32 sm:px-10 md:py-40 lg:px-16">
+    <section id="orwa" className="relative overflow-hidden border-t border-border/40 bg-primary/5 px-6 py-32 sm:px-10 md:py-40 lg:px-16">
       <div ref={ref} className="mx-auto max-w-[90rem]">
         {/* Large typographic statement */}
         <div className={`mb-24 transition-all duration-1000 ${isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}>

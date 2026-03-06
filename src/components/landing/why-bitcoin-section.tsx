@@ -18,7 +18,7 @@ const reasons = [
   {
     icon: Clock,
     title: "Instant finality",
-    description: "Lightning payments settle in seconds. No chargebacks, no holds, no waiting periods.",
+    description: "Payments settle in seconds. No chargebacks, no holds, no waiting periods.",
   },
   {
     icon: Lock,
@@ -29,7 +29,7 @@ const reasons = [
 
 const comparison = {
   traditional: ["Database-dependent", "Platform-locked", "Expires / devalues", "Opaque accounting"],
-  bitlasso: ["Cryptographically owned", "Fully portable", "Persistent value", "Transparent by design"],
+  bitlasso: ["Cryptographically owned", "Fully portable", "Persistent value", "Decentralized by design"],
 }
 
 export function WhyBitcoinSection() {

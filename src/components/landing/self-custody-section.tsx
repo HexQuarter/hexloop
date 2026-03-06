@@ -6,7 +6,7 @@ import { useInView } from "@/hooks/use-in-view"
 
 const facts = [
   { icon: ShieldCheck, title: "Bitcoin-secured", text: "Assets are secured by Spark's network anchored into Bitcoin." },
-  { icon: KeyRound, title: "Your passphrase", text: "Secured by a passphrase only known by you" },
+  { icon: KeyRound, title: "Your identity", text: "Powered by Nostr — you own your identity, not a platform" },
   { icon: Fingerprint, title: "Wallet-bound", text: "Once created, receipt tokens are associated to your wallet" },
   { icon: Lock, title: "Zero access", text: "We don't and we can't have access to your funds" },
 ]

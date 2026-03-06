@@ -8,12 +8,12 @@ const steps = [
   {
     icon: FileText,
     title: "Create a payment request",
-    description: "Generate a Lightning-compatible invoice for your client. Link it to a specific project, milestone, or deliverable.",
+    description: "Generate a payment invoice for your client. Link it to a specific project, milestone, or deliverable.",
   },
   {
     icon: Zap,
     title: "Payment settles instantly",
-    description: "Your client pays over the Lightning Network. Settlement is final, irreversible, and confirmed in seconds.",
+    description: "Your client pays over Bitcoin, Lightning or Spark. Settlement is final, irreversible, and confirmed in seconds.",
   },
   {
     icon: Award,

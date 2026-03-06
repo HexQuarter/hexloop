@@ -8,6 +8,7 @@ import { SelfCustodySection } from '@/components/landing/self-custody-section.ts
 import { PricingSection } from '@/components/landing/pricing-section.tsx'
 import { CtaSection } from '@/components/landing/cta-section.tsx'
 import { Footer } from '@/components/landing/footer.tsx'
+import { DecentralizationSection } from '@/components/landing/decentralization-section'
 
 export const LandingPage = () => {
   return (
@@ -18,6 +19,7 @@ export const LandingPage = () => {
       <HowItWorksSection />
       <WhyBitcoinSection />
       <OperationalSection />
+      <DecentralizationSection />
       <SelfCustodySection />
       <PricingSection />
       <CtaSection />

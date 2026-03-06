@@ -49,7 +49,7 @@ export function HeroSection() {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                         </span>
-                        <span className="font-mono text-[11px] font-medium tracking-[0.15em] text-muted-foreground uppercase">Bitcoin-native</span>
+                        <span className="font-mono text-[11px] font-medium tracking-[0.15em] text-muted-foreground uppercase">Bitcoin-backed & decentralized</span>
                     </div>
                 </div>
 
