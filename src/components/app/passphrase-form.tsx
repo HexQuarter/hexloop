@@ -7,6 +7,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { ArrowUpRight } from "lucide-react";
 
 type Props = {
     onSubmit: (mnemonic: string) => void
@@ -80,7 +81,7 @@ export const PassphraseForm: React.FC<Props> = ({ onSubmit, onBack, loading = fa
     }
 
     return (
-        <form className="bg-white flex flex-col gap-5 p-10 " onSubmit={handleSubmit}>
+        <form className="bg-white flex flex-col gap-5 md:p-10 " onSubmit={handleSubmit}>
             <div className="flex flex-col items-center gap-10">
                 <h1 className="w-full font-serif text-4xl font-normal text-foreground">Connect your <span className="text-primary">wallet.</span></h1>
                 <p className="text-muted-foreground">Sign in with a Spark-compatible Bitcoin wallet to issue work receipts and manage loyalty.</p>
@@ -103,7 +104,7 @@ export const PassphraseForm: React.FC<Props> = ({ onSubmit, onBack, loading = fa
                 </div>
                 <div className="flex flex-col lg:flex-row gap-2">
                     <Button className='flex-1 w-full' variant='outline' onClick={() => onBack()}>Back</Button>
-                    {valid && <Button type="submit" className='flex-1 w-full' disabled={loading}>{loading && <Spinner />} Join{loading && 'ing'} your workspace</Button>}
+                    {valid && <Button type="submit" className='flex-1 w-full' disabled={loading}>{loading && <Spinner />} Join{loading && 'ing'} your workspace <ArrowUpRight /></Button>}
                 </div>
                 {error && <p className="text-red-500 text-sm italic mt-2 text-center">{error}</p>}
             </FieldGroup>

@@ -5,6 +5,7 @@ import * as bip39 from '@scure/bip39';
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { ArrowUpRight, Coins, Rocket, Wallet } from "lucide-react";
 
 type Props = {
     onSubmit: (mnemonic: string) => void
@@ -12,7 +13,7 @@ type Props = {
     loading: boolean
 }
 
-export const CreateWalletForm: React.FC<Props> = ({ onSubmit, onBack, loading = false }) => {
+export const CreateWalletForm: React.FC<Props> = ({ onSubmit, loading = false }) => {
     const [mnemonic, setMnemonic] = useState<string[]>(["", "", "", "", "", "", "", "", "", "", "", ""]);
 
     useEffect(() => {
@@ -25,19 +26,26 @@ export const CreateWalletForm: React.FC<Props> = ({ onSubmit, onBack, loading = 
     }
 
     return (
-        <div className="flex flex-col gap-5 p-10">
-            <div className="flex flex-col gap-5">
-                <div className="flex flex-col gap-5">
-                    <h1 className="w-full font-serif text-4xl font-normal text-foreground">Your wallet <span className="text-primary">is ready !</span></h1>
-                    <div className="flex flex-col gap-2">
-                        <p className="text-muted-foreground text-sm">We created a Spark-compatible Bitcoin wallet to issue work receipts and manage loyalty.</p>
-                        <p className="text-muted-foreground text-sm">You can use it right away — your payment workspace is set up and ready to go.</p>
-                    </div>
+        <div className="flex flex-col gap-10 md:p-10">
+            <div className="flex flex-col gap-10">
+                <h1 className="w-full font-serif text-4xl font-normal text-foreground flex flex-col md:flex-row gap-2">Your wallet <span className="text-primary">is ready !</span></h1>
+                <div className="flex flex-col gap-5 md:gap-5">
+                    <p className="text-muted-foreground flex text-sm md:text-normal items-center gap-5">
+                        <Coins className="h-6 w-6 text-primary text-left" />
+                        <span className="flex-1">Mint tokens, issue work receipts and manage loyalty.</span>
+                    </p>
+                    <p className="text-muted-foreground flex text-sm md:text-normal items-center gap-5">
+                        <Wallet className="w-6 h-6 text-primary text-left" />
+                        <span className="flex-1">Receive and sends Bitcoin with your wallet at the speed of light with Spark.</span>
+                    </p>
+                    <p className="text-muted-foreground flex text-sm md:text-normal items-center gap-5">
+                        <Rocket className="h-6 w-6 text-primary" />
+                        <span className="flex-1">Your workspace is set up and ready to go.</span>
+                    </p>
                 </div>
             </div>
-            <div className="flex lg:flex-row flex-col gap-2 items-center w-full">
-                <Button variant='outline' className='flex-1 w-full' onClick={() => onBack()}>Back</Button>
-                <Button type="submit" className='flex-1 w-full' onClick={handleSubmit} disabled={loading}>{loading && <Spinner />} Open the app</Button>
+            <div className="flex lg:flex-row flex-col gap-2 items-center md:w-auto w-full">
+                <Button type="submit" className='md:w-auto w-full' onClick={handleSubmit} disabled={loading}>{loading && <Spinner />} Open the app <ArrowUpRight /></Button>
             </div>
         </div>
     )
