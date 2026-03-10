@@ -93,16 +93,16 @@ export const ActivePayment: React.FC<Props> = ({ settings, loading, price, onSub
     }
 
     return (
-        <div className={`overflow-hidden rounded-2xl p-0 bg-background transition-all duration-1000 delay-200 w-full flex flex-col gap-2`}>
-            <div className="flex flex-col gap-2 py-2">
-                <p className="font-medium font-mono text-primary uppercase text-xs px-5 py-2">Activate payment request</p>
+        <div className={`overflow-hidden rounded-2xl p-0 bg-background transition-all duration-1000 delay-200 w-full flex flex-col gap-2 border-primary/20 border-1`}>
+            <div className="flex flex-col gap-2">
+                <p className="font-medium font-mono text-white text-center uppercase text-k px-5 py-5 bg-primary border-primary/20 border-1 rounded-tr-2xl rounded-tl-2xl">Activate payment request</p>
             </div>
-            <div className="flex flex-col px-5">
+            <div className="flex flex-col px-5 py-2">
                 <header className="flex md:flex-row flex-col justify-between">
-                    <p className="text-sm font-bold">Cost 1 credit (~$1)</p>
-                    <div className="flex flex-col gap-2 md:items-end">
-                        <p className="md:text-end text-xs">Your got <span className="text-primary">{balance}</span> credits</p>
-                        {view != 'buy' && <div><Button variant="outline" className="text-xs h-0 py-3 px-3" onClick={() => setView('buy')}>Buy more credits  - save up to 25%</Button></div>}
+                    <p className="text-sm font-bold">Cost: 1 credit (~$1)</p>
+                    <div className="flex flex-col md:gap-1 gap-5 md:items-end">
+                        <p className="md:text-end text-sm">Your got <span className="text-primary">{balance}</span> credits</p>
+                        {view != 'buy' && <div><Button variant="outline" className="text-sm h-0 py-3 px-3" onClick={() => setView('buy')}>Buy more credits  - save up to 25%</Button></div>}
                     </div>
                 </header>
                 {view == 'buy' && <BuyBundleView
@@ -114,22 +114,22 @@ export const ActivePayment: React.FC<Props> = ({ settings, loading, price, onSub
                     status={status}
                     statusMessage={statusMessage}
                 />}
-                <p className="text-xs mt-5 mb-5">This includes: </p>
+                <p className="text-sm mt-5 mb-5">This includes: </p>
                 {included.map((item, i) => (
                     <div
                         key={item}
                         className={`flex items-center gap-4 py-2 ${i < included.length - 1 ? "border-b border-border/20" : ""}`}
                     >
-                        <div className="flex items-center justify-center rounded-full bg-primary/10 p-1">
-                            <Check className="h-3 w-3 text-primary" />
+                        <div className="flex items-center justify-center rounded-full bg-primary/10 p-2">
+                            <Check className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-xs text-foreground/80">{item}</span>
+                        <span className="text-sm text-foreground/80">{item}</span>
                     </div>
                 ))}
 
                 <div className="py-8 flex flex-col gap-2 px-5">
-                    <Button className="w-full" onClick={handleActivate}>
-                        {loading ? <Spinner /> : `Activate for ${balance == 0 ? `${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(USD_FEE)} (${singleFeeBtc} BTC)` : '1 credit'}`}
+                    <Button className="w-full flex flex-col" onClick={handleActivate}>
+                        {loading ? <Spinner /> : `Activate for ${balance == 0 ? `${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(USD_FEE)} ` : '1 credit'}`}
                     </Button>
                 </div>
             </div>
