@@ -38,6 +38,7 @@ export type SparkPayment = {
     amount: bigint
     timestamp: number
     direction: SparkPaymentDirection
+    method: "lightning" | "spark" | "token" | "deposit" | "withdraw"
 }
 
 export type PriceRate = {
@@ -683,6 +684,7 @@ export class BreezSparkWallet extends TypedEventEmitter<BreezEvent> implements W
                 id: p.id,
                 amount: p.amount,
                 timestamp: p.timestamp,
+                method: p.method as "lightning" | "spark" | "token" | "deposit" | "withdraw",
                 direction: p.paymentType == 'send' ? 'OUTGOING' : 'INCOMING'
             }
         })
