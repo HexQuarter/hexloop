@@ -554,7 +554,7 @@ export const DashboardPage = () => {
                             </CardContent>
                         </Card>
                         }
-                        {wallet && addresses &&
+                        {!walletLoading && wallet && addresses &&
                             <WalletCard
                                 addresses={addresses}
                                 btcBalance={Number(btcBalance) / (10 ** 8)}
