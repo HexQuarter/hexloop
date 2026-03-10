@@ -230,6 +230,7 @@ export const DashboardPage = () => {
 
             const metadata = await wallet.getTokenMetadata()
             setTokenMetadata(metadata)
+            setIssuanceStats({ mints: 0, burns: 0, circulating: 0, transfers: 0 })
         }
         catch (e) {
             const error = e as Error
