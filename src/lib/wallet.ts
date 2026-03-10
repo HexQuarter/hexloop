@@ -93,6 +93,8 @@ interface _SparkWallet {
     fetchPrices(): Promise<PriceRate[]>
     on<K extends keyof BreezEvent>(eventName: K, callback: BreezEvent[K]): void
     validAddress(string: string, method?: 'spark' | 'lightning' | 'bitcoin'): Promise<boolean>
+    signMessage(message: string): Promise<{ signature: string, pubkey: string}>
+    disconnect(): Promise<void>
 }
 
 interface NostrWallet {
@@ -347,8 +349,7 @@ export class BreezSparkWallet extends TypedEventEmitter<BreezEvent> implements W
         }
         const tokenIssuer = this.sdk.getTokenIssuer()
         const payment = await tokenIssuer.burnIssuerToken({ amount })
-        const paymentDetails = payment.details as { type: 'token'; txHash: string };
-        return { id: paymentDetails.txHash, timestamp: new Date(payment.timestamp * 1000) };
+        return { id: payment.id, timestamp: new Date(payment.timestamp * 1000) };
     }
 
     async getTokenMetadata(identifier?: string): Promise<TokenMetadata | undefined> {
@@ -485,7 +486,10 @@ export class BreezSparkWallet extends TypedEventEmitter<BreezEvent> implements W
             prepareResponse
         })
         const payment = sendResponse.payment
-        return { paymentId: payment.id };
+        if (payment.details?.type != 'token') {
+            throw new Error('Expected token transfer')
+        }
+        return { paymentId: payment.details.txHash };
     }
 
     async sendOnChainPayment(address: string, amountSats: number): Promise<{ paymentId: string }> {
@@ -720,4 +724,18 @@ export class BreezSparkWallet extends TypedEventEmitter<BreezEvent> implements W
         }
         return finalizeEvent(event, hexToBytes(this.nostrKeypair.priv))
     }
+
+    async signMessage(message: string): Promise<{ signature: string, pubkey: string}> {
+        const signMessageResponse = await this.sdk.signMessage({
+            message,
+            compact: true
+        })
+
+        return signMessageResponse
+    }
+
+    async disconnect(): Promise<void> {
+        await this.sdk.disconnect()
+    }
+
 }

@@ -29,11 +29,12 @@ export type PaymentRequestData = {
 type Props = {
     settings: Settings
     onSubmit: (data: PaymentRequestData) => Promise<void>
+    onPurchaseCredits: (amount: number) => Promise<void>
     price: number
     creditBalance: number
 }
 
-export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings, creditBalance }) => {
+export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings, creditBalance, onPurchaseCredits }) => {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -135,7 +136,7 @@ export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings,
                             </CardContent>
                         </Card>
                         { ready && <DialogFooter>
-                            <ActivePayment settings={settings} loading={loading} price={price} onSubmit={handleActivatePayment} creditBalance={creditBalance} />
+                            <ActivePayment settings={settings} loading={loading} price={price} onSubmit={handleActivatePayment} creditBalance={creditBalance} onPurchaseCredits={onPurchaseCredits} />
                         </DialogFooter>}
                         <DialogClose asChild><Button variant="outline" className="w-full bg-white">Cancel</Button></DialogClose>
                     </div>

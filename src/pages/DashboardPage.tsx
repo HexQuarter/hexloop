@@ -19,9 +19,9 @@ import { AlertTriangle, AlertTriangleIcon, Coins, ExternalLink, FileText, MoreHo
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { RevenueChart } from "@/components/app/revenue-chart"
-import { fetchPaymentsRequest, getNotifSettings, listReceipts, publishPaymentRequest, publishReceiptMetadata, removePaymentRequest } from "@/lib/nostr"
+import { fetchPaymentsRequest, getNotifSettings, listReceipts, publishReceiptMetadata, removePaymentRequest } from "@/lib/nostr"
 import { Spinner } from "@/components/ui/spinner"
-import { getSettings, getStatus, type Settings } from "@/lib/api"
+import { getSettings, getStatus, publishPaymentRequest, type Settings } from "@/lib/api"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useNavigate } from "react-router"
 import { IconMessageDollar } from "@tabler/icons-react"
@@ -33,7 +33,7 @@ export const DashboardPage = () => {
 
     const hasSecuredMnemonic = localStorage.getItem('BITLASSO_SECURED_MNEMONIC') || 'false'
 
-    const [initializing, setInitializing] = useState(true)
+    const [tokenMetadataLoading, setTokenMetadataLoading] = useState(true)
     const [btcBalance, setBtcBalance] = useState(0n)
     const [tokenBalances, setTokenBalances] = useState<TokenBalanceMap | undefined>(undefined)
     const [issuanceStats, setIssuanceStats] = useState<TokenStats | undefined>(undefined)
@@ -47,6 +47,7 @@ export const DashboardPage = () => {
     const [notifSettingAlert, setNotifSettingAlert] = useState(false)
     const [walletLoading, setWalletLoading] = useState(true)
     const [paymentRequestLoading, setPaymentRequestLoading] = useState(true)
+    const [receiptLoading, setReceiptLoading] = useState(true)
     const [walletHistoryLoading, setWalletHistoryLoading] = useState(true)
     const [settings, setSettings] = useState<Settings | undefined>(undefined)
 
@@ -68,15 +69,15 @@ export const DashboardPage = () => {
         }
     }
 
-    const claimPaymentRequestBalances = async (sparkAddress: string) => {
+    const claimPaymentRequestBalances = async (sparkAddress: string, paymentRequests: Payment[]) => {
         if (!wallet) return
-        let claimPromises: Promise<void>[] = []
-        const lastNonce = Number(localStorage.getItem('BITLASSO_PAYMENT_NONCE') || '0')
-        const limit = pLimit(2);
 
-        for (let i = 2; i <= lastNonce; i++) {
+        let claimPromises: Promise<void>[] = []
+        const limit = pLimit(1);
+
+        for (let payment of paymentRequests) {
             claimPromises.push(limit(async () => {
-                const requestSdk = await wallet.withAccountNumber(i)
+                const requestSdk = await wallet.withAccountNumber(payment.nonce)
 
                 const unclaimedBitcoinDeposits = await requestSdk.listUnclaimDeposits()
 
@@ -88,9 +89,10 @@ export const DashboardPage = () => {
                 const satsBalance = Number(balance.balance)
 
                 if (satsBalance > 0) {
-                    console.log('claiming from sub account', i, satsBalance / 100_000_000)
+                    console.log('claiming from sub account', payment.nonce, satsBalance / 100_000_000)
                     await requestSdk.sendSparkPayment(sparkAddress, satsBalance)
                 }
+                await requestSdk.disconnect()
             }))
         }
 
@@ -98,6 +100,18 @@ export const DashboardPage = () => {
     }
 
     const fetchData = async (wallet: Wallet) => {
+        try {
+            const metadata = await wallet.getTokenMetadata().catch(() => null)
+            if (metadata) {
+                setTokenMetadata(metadata)
+                setTimeout(async () => await refreshIssuanceStats(wallet, metadata))
+            }
+            setTokenMetadataLoading(false)
+        }
+        catch(_e) {
+            setTokenMetadataLoading(false)
+        }
+
         const _settings = await getSettings()
         setSettings(_settings)
 
@@ -109,13 +123,13 @@ export const DashboardPage = () => {
             ])
             setAddresses({ btc, spark, ln })
             setWalletLoading(false)
-            // setTimeout(() => claimPaymentRequestBalances(spark))
         })
 
         setTimeout(async () => {
             await refreshPaymentRequests()
             await refreshReceipts()
             setPaymentRequestLoading(false)
+            setReceiptLoading(false)
         })
 
         setTimeout(async () => {
@@ -126,12 +140,6 @@ export const DashboardPage = () => {
                 setWalletHistoryLoading(false)
             })
         })
-
-        const metadata = await wallet.getTokenMetadata().catch(() => null)
-        if (metadata) {
-            setTokenMetadata(metadata)
-            setTimeout(async () => await refreshIssuanceStats(wallet, metadata))
-        }
 
         setTimeout(async () => {
             const prices = await wallet.fetchPrices()
@@ -163,7 +171,6 @@ export const DashboardPage = () => {
                         }
                     })
                     await fetchData(wallet)
-                    setInitializing(false)
 
                     wallet.on('synced', async () => {
                         await updateBalance(wallet)
@@ -185,6 +192,12 @@ export const DashboardPage = () => {
                 setErrorSpark('An error occured. Please retry in few moments. We are sorry for this inconvenience.')
             })
     }, [wallet])
+
+    useEffect(() => {
+        if (!addresses) return
+
+        claimPaymentRequestBalances(addresses.spark, paymentRequests)
+    }, [addresses, paymentRequests])
 
     const refreshPaymentRequests = async () => {
         if (!wallet) return
@@ -258,8 +271,9 @@ export const DashboardPage = () => {
         if (!wallet || !tokenMetadata || !settings || !tokenBalances) return
 
         const asset = { name: "Bitcoin", symbol: "BTC", max: 0 }
+        let txId: string
         if (data.feeBTC) {
-            await send(wallet, asset, data.feeBTC, settings.address, "spark")
+            txId = await send(wallet, asset, data.feeBTC, settings.address, "spark")
         }
         else {
             const burnToken = tokenBalances.get(settings.tokenAddress)
@@ -272,7 +286,8 @@ export const DashboardPage = () => {
             const decimalsFactor = BigInt(10) ** BigInt(burnToken.tokenMetadata.decimals)
             const burnAmount = BigInt(creditsToBurn) * decimalsFactor
 
-            await wallet.burnTokens(burnAmount, burnToken.tokenMetadata.identifier)
+            const { id } = await wallet.burnTokens(burnAmount, burnToken.tokenMetadata.identifier)
+            txId = id
 
             setTokenBalances((prev) => {
                 if (!prev) return prev
@@ -289,7 +304,7 @@ export const DashboardPage = () => {
         }
 
         const nonce = Number(localStorage.getItem('BITLASSO_PAYMENT_NONCE') || '0') + 1
-        await publishPaymentRequest(wallet, nonce, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
+        await publishPaymentRequest(txId, wallet, nonce, data.amount, tokenMetadata.identifier, data.discountRate, data.description)
         await refreshPaymentRequests()
 
         toast.success('Payment request created successfully')
@@ -336,7 +351,34 @@ export const DashboardPage = () => {
         await refreshReceipts()
     }
 
-    const tokensData: { id: string, name: string, symbol: string, amount: number}[] = useMemo(() => {
+    const handlePurchaseCredits = async (amount: number) => {
+        if (!settings || !tokenBalances) return
+
+        const tokenMetadata = await wallet?.getTokenMetadata(settings.tokenAddress) as TokenMetadata
+
+        setTokenBalances((prev) => {
+            if (!prev) return prev
+            const updated = new Map(prev)
+            const entry = updated.get(tokenMetadata.identifier)
+            const addition = BigInt(amount * (10 ** tokenMetadata.decimals))
+
+            if (!entry) {
+                updated.set(tokenMetadata.identifier, {
+                    balance: addition,
+                    tokenMetadata
+                })
+                return updated
+            }
+
+            updated.set(tokenMetadata.identifier, {
+                ...entry,
+                balance: entry.balance + addition
+            })
+            return updated
+        })
+    }
+
+    const tokensData: { id: string, name: string, symbol: string, amount: number }[] = useMemo(() => {
         const tokensData: any[] = []
         if (tokenBalances) {
             for (let [_, val] of tokenBalances) {
@@ -375,27 +417,29 @@ export const DashboardPage = () => {
 
     return (
         <div className="flex flex-col w-full gap-10">
-            {hasSecuredMnemonic == 'false' && <Alert className="py-5">
-                <AlertTriangleIcon />
-                <AlertTitle>Secure your wallet before going live</AlertTitle>
-                <AlertDescription className="flex flex-col gap-2">
-                    <div className="flex flex-col">
-                        <p className="font-bold text-primary">Your secret phrase has not been saved yet. </p>
-                        <p>If you lose access to this device, your funds cannot be recovered by anyone — including us.</p>
-                    </div>
-                    <div><Button className="h-4 text-xs p-5" onClick={() => navigate('/app/settings')}>Export your secret phrase</Button></div>
-                </AlertDescription>
-            </Alert>}
-            {notifSettingAlert && <Alert className="py-5">
-                <IconMessageDollar />
-                <AlertTitle>Be notified when you're paid</AlertTitle>
-                <AlertDescription className="flex flex-col gap-2">
-                    <div className="flex flex-col">
-                        <p>You can active notifications to get updates when your payment is processed.</p>
-                    </div>
-                    <div><Button variant='outline' className="h-4 text-xs p-4 mt-0" onClick={() => navigate('/app/settings')}>Enable notifications</Button></div>
-                </AlertDescription>
-            </Alert>}
+            <div className="flex flex-col gap-2">
+                {hasSecuredMnemonic == 'false' && <Alert className="py-5">
+                    <AlertTriangleIcon />
+                    <AlertTitle>Secure your wallet before going live</AlertTitle>
+                    <AlertDescription className="flex flex-col gap-2">
+                        <p>
+                            <span className="italic text-primary">Your secret phrase has not been saved yet. </span>
+                            <span>If you lose access to this device, your funds cannot be recovered by anyone — including us.</span>
+                        </p>
+                        <div><Button variant='outline' className="h-4 text-xs p-4 mt-0" onClick={() => navigate('/app/settings')}>Export your secret phrase</Button></div>
+                    </AlertDescription>
+                </Alert>}
+                {notifSettingAlert && <Alert className="py-5">
+                    <IconMessageDollar />
+                    <AlertTitle>Be notified when you're paid</AlertTitle>
+                    <AlertDescription className="flex flex-col gap-2">
+                        <div className="flex flex-col">
+                            <p>You can active notifications to get updates when your payment is processed.</p>
+                        </div>
+                        <div><Button variant='outline' className="h-4 text-xs p-4 mt-0" onClick={() => navigate('/app/settings')}>Enable notifications</Button></div>
+                    </AlertDescription>
+                </Alert>}
+            </div>
             {errorSpark && <Alert className="py-5 bg-primary/10 text-primary border-1 border-primary/20">
                 <AlertTriangle />
                 <AlertTitle className="font-semibold">Networking issue</AlertTitle>
@@ -404,10 +448,10 @@ export const DashboardPage = () => {
                 </AlertDescription>
             </Alert>}
             <div className="flex flex-col gap-2 justify-between">
-                <h1 className="text-4xl font-serif font-normal text-foreground flex items-center">Dashboard {initializing && <Spinner className="ml-2 text-primary" />}</h1>
+                <h1 className="text-4xl font-serif font-normal text-foreground flex md:items-center justify-between md:flex-row flex-col">Dashboard {tokenMetadataLoading && <p className="text-xs flex items-center font-mono uppercase text-primary"><span>Retrieveing token metadata...</span> <Spinner className="ml-2 text-primary" /></p>}</h1>
                 <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
             </div>
-            <div className="grid lg:grid-cols-3 gap-2">
+            {(!tokenMetadataLoading && tokenMetadata) && <div className="grid lg:grid-cols-3 gap-2">
                 <Card className="col-span-1">
                     <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -460,11 +504,11 @@ export const DashboardPage = () => {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </CardHeader>
-                        {!tokenMetadata && !issuanceStats && <CardContent className="flex flex-col gap-2">
+                        {!issuanceStats && <CardContent className="flex flex-col gap-2">
                             <Skeleton className="h-10 w-1/4" />
                             <Skeleton className="h-10 w-1/4" />
                         </CardContent>}
-                        {issuanceStats && tokenMetadata &&
+                        {issuanceStats &&
                             <CardContent className="flex flex-col gap-2">
                                 <span className="text-2xl font-semibold">{issuanceStats.mints} {tokenMetadata.symbol}</span>
                                 <span className="text-muted-foreground text-xs">{issuanceStats.burns} redeemed</span>
@@ -521,9 +565,9 @@ export const DashboardPage = () => {
 
                     </div>
                 </div>
-            </div>
+            </div>}
             <div className="grid lg:grid-cols-2 gap-2">
-                {!initializing && !tokenMetadata &&
+                {!tokenMetadataLoading && !tokenMetadata &&
                     <Card className="flex flex-col justify-between lg:col-span-1">
                         <CardHeader>
                             <h2 className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Set up your loyalty token</h2>
@@ -564,21 +608,21 @@ export const DashboardPage = () => {
                         </CardFooter>
                     </Card>
                 }
-                <Card className="lg:col-span-1" id="payments">
+                {!tokenMetadataLoading && <Card className="lg:col-span-1" id="payments">
                     <CardHeader className="flex flex-col">
                         <CardTitle className="flex lg:flex-row flex-col justify-between w-full gap-5">
                             <div className="flex flex-col lg:flex-row lg:justify-between lg:w-full gap-2">
                                 <p className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Payment requests</p>
-                                {initializing && <Skeleton className="h-10 w-40" />}
-                                {!initializing && settings && <CardAction className='w-full lg:w-auto'>
-                                    <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} />
+                                {paymentRequestLoading && <Skeleton className="h-10 w-40" />}
+                                {!paymentRequestLoading && settings && <CardAction className='w-full lg:w-auto'>
+                                    <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} onPurchaseCredits={handlePurchaseCredits} />
                                 </CardAction>}
                             </div>
                         </CardTitle>
                         <CardDescription>Request Bitcoin payments from your clients.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {initializing &&
+                        {paymentRequestLoading &&
                             <div className="flex w-full flex-col gap-2">
                                 {Array.from({ length: 5 }).map((_, index) => (
                                     <div className="flex gap-4" key={index}>
@@ -591,7 +635,7 @@ export const DashboardPage = () => {
                                 ))}
                             </div>
                         }
-                        {!initializing &&
+                        {!paymentRequestLoading &&
                             <div className="md:max-w-full max-w-xs">
                                 <PaymentTable
                                     data={paymentRequests.map(r => ({
@@ -615,22 +659,22 @@ export const DashboardPage = () => {
                             </div>
                         }
                     </CardContent>
-                </Card>
-                {(initializing || (!initializing && tokenMetadata)) && <Card className="lg:col-span-1" id="receipts">
+                </Card>}
+                {(!tokenMetadataLoading && tokenMetadata) && <Card className="lg:col-span-1" id="receipts">
                     <CardHeader className="flex flex-col">
                         <CardTitle className="flex 2xl:flex-row flex-col justify-between w-full gap-10">
                             <div className="flex flex-col lg:flex-row justify-between lg:w-full gap-5">
                                 <p className="text-2xl font-serif text-2xl font-light ">Receipts</p>
                                 <CardAction >
-                                    {initializing && <Skeleton className="h-10 w-30" />}
-                                    {!initializing && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
+                                    {receiptLoading && <Skeleton className="h-10 w-30" />}
+                                    {!receiptLoading && <IssueReceiptForm onSubmit={handleIssueReceipt} paymentRequests={paymentRequests} />}
                                 </CardAction>
                             </div>
                         </CardTitle>
                         <CardDescription>Receipts issued for completed and paid work</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {initializing &&
+                        {receiptLoading &&
                             <div className="flex flex-col gap-2">
                                 {Array.from({ length: 5 }).map((_, index) => (
                                     <div className="flex gap-4" key={index}>
@@ -643,7 +687,7 @@ export const DashboardPage = () => {
                             </div>
                         }
                         <div className="md:max-w-full max-w-xs">
-                            {!initializing && tokenMetadata &&
+                            {!receiptLoading && tokenMetadata &&
                                 <ReceiptTable
                                     receipts={receipts}
                                     paymentRequests={paymentRequests}

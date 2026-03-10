@@ -357,7 +357,7 @@ export const PaymentPage: React.FC = () => {
                                         <TabsReceive
                                             btcAddress={paymentRequest.btcAddress}
                                             sparkAddress={paymentRequest.sparkAddress}
-                                            lnAddress={paymentRequest.lnAddress}
+                                            lnAddress={paymentRequest.lightningInvoice}
                                             onTabChange={handleSelectPaymentChange}
                                             amount={btcAmount}
                                         />

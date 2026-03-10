@@ -9,9 +9,7 @@ const included = [
   "Payment request page generation",
   "Multi payment support: Spark, Lightning, Bitcoin",
   "Client redemption flow: mint receipts & discount",
-  "No monthly subscription",
-  "No custody of funds",
-  "No processor lock-in",
+  "Self-custody funds settlement"
 ]
 
 const bundles = [

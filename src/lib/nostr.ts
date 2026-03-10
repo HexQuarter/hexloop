@@ -20,9 +20,9 @@ const RELAYS = [
 ];
 
 enum EventKind {
-    PAYMENT_REQ = 6003,
     RECEIPT = 6004,
     SETTING = 6005,
+    PAYMENT_REQ = 6006,
     BTC_PAYMENT = 6011,
     SPARK_REDEEM = 6012,
     BTC_PRICE = 30010,
@@ -85,31 +85,6 @@ export const getNotifSettingsByPublicKey = async (publicKey: string): Promise<No
     return undefined
 }
 
-export const publishPaymentRequest = async (wallet: Wallet, nonce: number, amount: number, tokenId: string, discountRate: number, description?: string) => {
-    const btcAddress = await wallet.createBitcoinAddress(nonce);
-    const sparkAddress = await wallet.createSparkAddress(nonce)
-
-    const subLightningWallet = await wallet.withAccountNumber(nonce)
-    const { invoice: lnAddress } = await subLightningWallet.createLightningInvoice();
-    const event = {
-        kind: EventKind.PAYMENT_REQ,
-        content: JSON.stringify({ amount, discountRate, description, btcAddress, sparkAddress, lnAddress }),
-        pubkey: wallet.getNostrPublicKey(),
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [
-            ["nonce", (nonce + 1).toString()],
-            ["token", tokenId]
-        ]
-    }
-
-    const signedEvent = wallet.signNostrEvent(event);
-    await pool.publish(RELAYS, signedEvent)
-    return {
-        id: signedEvent.id,
-        createdAt: signedEvent.created_at
-    }
-}
-
 export const removePaymentRequest = async (wallet: Wallet, id: string) => {
     const event = {
         kind: 5,
@@ -127,7 +102,7 @@ export const removePaymentRequest = async (wallet: Wallet, id: string) => {
 export const fetchPaymentsRequest = async (wallet: Wallet): Promise<Payment[]> => {
     const events = await pool.querySync(RELAYS, {
         kinds: [EventKind.PAYMENT_REQ],
-        authors: [wallet.getNostrPublicKey()]
+        "#p": [wallet.getNostrPublicKey()]
     });
 
     if (events.length == 0) return []
@@ -166,8 +141,10 @@ export const fetchPaymentsRequest = async (wallet: Wallet): Promise<Payment[]> =
 export const fetchPaymentRequest = async (id: string): Promise<PaymentRequest> => {
     const events = await pool.querySync(RELAYS, {
         kinds: [EventKind.PAYMENT_REQ],
-        ids: [id]
+        ids: [id],
+        authors: [import.meta.env.VITE_API_NOSTR_PUB]
     });
+
     if (events.length == 0) {
         throw new Error('Payment not found')
     }
@@ -246,7 +223,7 @@ export type PaymentRequest = {
     description: string | undefined;
     btcAddress: string,
     sparkAddress: string,
-    lnAddress: string,
+    lightningInvoice: string,
     settleTx: string | undefined,
     discountRate: number,
     tokenId: string,
@@ -309,7 +286,6 @@ export const getBitcoinPrice = async (id: string): Promise<{ usdPrice: number, d
     const payment = await fetchPaymentDetails(id)
     if (!payment) return undefined
 
-    console.log(payment)
     const events = await pool.querySync(RELAYS, {
         ids: [payment.refPriceId]
     });
