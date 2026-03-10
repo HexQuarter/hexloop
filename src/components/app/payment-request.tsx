@@ -46,7 +46,6 @@ export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings,
     const handleChangeAmount = (val: string) => {
         const amount = parseFloat(val)
         if (Number.isNaN(amount)) {
-            setAmount(0)
             setReady(false)
             return
         }
@@ -102,45 +101,43 @@ export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings,
                         Request a Bitcoin payment for completed work.
                     </DialogDescription>
                 </DialogHeader>
-                <form>
-                    <div className="flex flex-col gap-4 my-4">
-                        <Card className="bg-white">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-semibold text-black">Amount</CardTitle>
-                                <CardDescription className=" text-muted-foreground">Enter the amount in USD for the payment request.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Input required id="amount" type='number' min='0' placeholder='0' onChange={(e) => handleChangeAmount(e.target.value)} value={amount} />
-                            </CardContent>
-                            <CardFooter className="flex flex-col gap-5 items-start">
-                                <p className="text-xs text-gray-400">A BTC payment equivalent of {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)} will be present and refreshed on the checkout page matching the most recent rate.</p>
-                            </CardFooter>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg font-semibold text-black">Description (optional)</CardTitle>
-                                <CardDescription className="">What is this payment for ?</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col gap-2">
-                                <Textarea id="description" onChange={(e) => setDescription(e.target.value)} placeholder="Frontend delivery for Project Alpha" value={description} />
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg font-semibold text-black">Discount percentage</CardTitle>
-                                <CardDescription className="">What is the maximum discount (%) a customer can receive by redeeming tokens?</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col gap-2">
-                                <Input type="number" min="0" max="100" step="5" value={discountRate} onChange={(e) => handleDiscountChange(e.target.value)} />
-                                <p className="text-xs text-gray-400">For exemple with a $1000 request, customer could have a max discount of ${1000 - (1000 * (1 - discountRate / 100))}</p>
-                            </CardContent>
-                        </Card>
-                        { ready && <DialogFooter>
-                            <ActivePayment settings={settings} loading={loading} price={price} onSubmit={handleActivatePayment} creditBalance={creditBalance} onPurchaseCredits={onPurchaseCredits} />
-                        </DialogFooter>}
-                        <DialogClose asChild><Button variant="outline" className="w-full bg-white">Cancel</Button></DialogClose>
-                    </div>
-                </form>
+                <div className="flex flex-col gap-4 my-4">
+                    <Card className="bg-white">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold text-black">Amount</CardTitle>
+                            <CardDescription className=" text-muted-foreground">Enter the amount in USD for the payment request.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Input required id="amount" type='number' inputMode="numeric"  min='0' placeholder='0' onChange={(e) => handleChangeAmount(e.target.value)} value={amount} />
+                        </CardContent>
+                        <CardFooter className="flex flex-col gap-5 items-start">
+                            <p className="text-xs text-gray-400">A BTC payment equivalent of {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)} will be present and refreshed on the checkout page matching the most recent rate.</p>
+                        </CardFooter>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold text-black">Description (optional)</CardTitle>
+                            <CardDescription className="">What is this payment for ?</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-2">
+                            <Textarea id="description" onChange={(e) => setDescription(e.target.value)} placeholder="Frontend delivery for Project Alpha" value={description} />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold text-black">Discount percentage</CardTitle>
+                            <CardDescription className="">What is the maximum discount (%) a customer can receive by redeeming tokens?</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-2">
+                            <Input type="number" min="0" max="100" step="5" value={discountRate} onChange={(e) => handleDiscountChange(e.target.value)} />
+                            <p className="text-xs text-gray-400">For exemple with a $1000 request, customer could have a max discount of ${1000 - (1000 * (1 - discountRate / 100))}</p>
+                        </CardContent>
+                    </Card>
+                    {ready && <DialogFooter>
+                        <ActivePayment settings={settings} loading={loading} price={price} onSubmit={handleActivatePayment} creditBalance={creditBalance} onPurchaseCredits={onPurchaseCredits} />
+                    </DialogFooter>}
+                    <DialogClose asChild><Button variant="outline" className="w-full bg-white">Cancel</Button></DialogClose>
+                </div>
             </DialogContent>
         </Dialog>
     )
