@@ -1,5 +1,5 @@
 import type { NotificationSettings } from "@/components/app/notification-setting";
-import { SimplePool, getPublicKey, nip44, type VerifiedEvent } from "nostr-tools"
+import { SimplePool, getPublicKey, type VerifiedEvent } from "nostr-tools"
 
 import { HDKey } from "@scure/bip32";
 import { bech32 } from "bech32";
