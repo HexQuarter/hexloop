@@ -15,7 +15,7 @@ import type { Asset } from "@/components/app/send"
 import { send } from "@/lib/utils"
 import type { ReceiptMetadataData } from "@/components/app/receipt-metadata-form"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertTriangle, AlertTriangleIcon, Coins, ExternalLink, FileText, MoreHorizontal, Pickaxe, RefreshCcw, Rocket, Wallet2, Zap } from "lucide-react"
+import { AlertTriangle, AlertTriangleIcon, Coins, ExternalLink, FileText, MoreHorizontal, Pickaxe, Plus, RefreshCcw, Rocket, Wallet2, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { RevenueChart } from "@/components/app/revenue-chart"
@@ -161,17 +161,19 @@ export const DashboardPage = () => {
     useEffect(() => {
         if (!wallet) return
 
-        setTimeout(async () => {
-            const notifSettings = await getNotifSettings(wallet)
-            if (!notifSettings || (notifSettings.email == undefined && notifSettings.npub == undefined)) {
-                setNotifSettingAlert(true)
-            }
-        })
+
 
         getStatus()
             .then(async ({ sparkStatus }) => {
                 if (sparkStatus == 'operational') {
                     setErrorSpark(undefined)
+
+                    setTimeout(async () => {
+                        const notifSettings = await getNotifSettings(wallet)
+                        if (!notifSettings || (notifSettings.email == undefined && notifSettings.npub == undefined)) {
+                            setNotifSettingAlert(true)
+                        }
+                    })
 
                     await fetchData(wallet)
 
@@ -192,6 +194,7 @@ export const DashboardPage = () => {
             })
             .catch(async (e) => {
                 console.log(e)
+                setTokenMetadataLoading(false)
                 setErrorSpark('An error occured. Please retry in few moments. We are sorry for this inconvenience.')
             })
     }, [wallet])
@@ -421,6 +424,10 @@ export const DashboardPage = () => {
     return (
         <div className="flex flex-col w-full gap-10">
             <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 justify-between">
+                    <h1 className="text-4xl font-serif font-normal text-foreground flex md:items-center justify-between md:flex-row flex-col">Dashboard {tokenMetadataLoading && <p className="text-xs flex items-center font-mono uppercase text-primary"><span>Retrieveing token metadata...</span> <Spinner className="ml-2 text-primary" /></p>}</h1>
+                    <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
+                </div>
                 {hasSecuredMnemonic == 'false' && <Alert className="py-5">
                     <AlertTriangleIcon />
                     <AlertTitle>Secure your wallet before going live</AlertTitle>
@@ -450,10 +457,8 @@ export const DashboardPage = () => {
                     {errorSpark}
                 </AlertDescription>
             </Alert>}
-            <div className="flex flex-col gap-2 justify-between">
-                <h1 className="text-4xl font-serif font-normal text-foreground flex md:items-center justify-between md:flex-row flex-col">Dashboard {tokenMetadataLoading && <p className="text-xs flex items-center font-mono uppercase text-primary"><span>Retrieveing token metadata...</span> <Spinner className="ml-2 text-primary" /></p>}</h1>
-                <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
-            </div>
+
+
             {(!tokenMetadataLoading && tokenMetadata) && <div className="grid lg:grid-cols-3 gap-2">
                 <Card className="col-span-1">
                     <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
@@ -569,7 +574,7 @@ export const DashboardPage = () => {
                     </div>
                 </div>
             </div>}
-            <div className="grid lg:grid-cols-2 gap-2">
+            {!errorSpark && <div className="grid lg:grid-cols-2 gap-2">
                 {!tokenMetadataLoading && !tokenMetadata &&
                     <Card className="flex flex-col justify-between lg:col-span-1">
                         <CardHeader>
@@ -618,7 +623,8 @@ export const DashboardPage = () => {
                                 <p className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Payment requests</p>
                                 {paymentRequestLoading && <Skeleton className="h-10 w-40" />}
                                 {!paymentRequestLoading && settings && <CardAction className='w-full lg:w-auto'>
-                                    <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} onPurchaseCredits={handlePurchaseCredits} />
+                                    {btcBalance > 0n && <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} onPurchaseCredits={handlePurchaseCredits} />}
+                                    {btcBalance == 0n && <Button className="flex gap-2 has-[>svg]:pr-5 bg-primary hover:bg-black w-full lg:w-auto" disabled><Plus className="h-4 w-4" />New payment request</Button>}
                                 </CardAction>}
                             </div>
                         </CardTitle>
@@ -698,7 +704,7 @@ export const DashboardPage = () => {
                         </div>
                     </CardContent>
                 </Card>}
-            </div>
+            </div>}
         </div>
     )
 }

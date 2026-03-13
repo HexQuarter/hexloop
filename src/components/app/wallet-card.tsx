@@ -3,13 +3,14 @@ import { Receive } from "./receive"
 import { Send, type Asset } from "./send"
 import type { Addresses } from "@/hooks/use-wallet"
 import type { SparkPayment, Wallet } from "@/lib/wallet"
-import { ExternalLink, MoreHorizontal, Wallet2 } from "lucide-react"
+import { AlertTriangleIcon, ExternalLink, MoreHorizontal, Wallet2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { Button } from "../ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "../ui/chart"
 import { Area, AreaChart, CartesianGrid } from "recharts"
 import { useMemo } from "react"
 import { Skeleton } from "../ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 
 type Token = {
     id: string
@@ -109,6 +110,17 @@ export const WalletCard: React.FC<Props> = ({ btcBalance, tokens, addresses, pri
                     <span className="text-2xl font-semibold">{currencyFormat.format(btcBalance * price)}</span>
                     <span className="text-xs text-muted-foreground">{btcBalance} BTC</span>
                 </div>
+                {btcBalance == 0 &&
+                    <Alert className="py-5">
+                        <AlertTriangleIcon />
+                        <AlertTitle>Adds funds to your wallet before emit payment requests</AlertTitle>
+                        <AlertDescription className="flex flex-col gap-0 mt-5">
+                            <p>Click on <span className="text-primary">Receive</span> to display wallet address.</p>
+                            <p>Then start a Bitcoin transfer to your <strong>BitLasso</strong> wallet.</p>
+                            <p>Once credited, you will be able to create payment request for ~$1</p>
+                        </AlertDescription>
+                    </Alert>
+                }
                 <div className="flex gap-3">
                     <Send assets={assets} price={price} onSend={onSend} wallet={wallet} />
                     <Receive addresses={addresses} />

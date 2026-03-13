@@ -44,6 +44,7 @@ export const PaymentPage: React.FC = () => {
     const [sendError, setSendError] = useState<undefined | string>(undefined)
 
     const [completed, setCompleted] = useState(false)
+    const [paymentMade, setPaymentMade] = useState(false)
     const [paymentReceived, setPaymentReceived] = useState(false)
     const [selectedPaymentTab, setSelectedPaymentTab] = useState("spark")
     const [paymentAddress, setPaymentAddress] = useState<undefined | string>(undefined)
@@ -210,7 +211,7 @@ export const PaymentPage: React.FC = () => {
                 return
             }
 
-            setCompleted(true)
+            setPaymentMade(true)
         }
         else if (selectedPaymentTab == 'btc') {
             const response = await request('sendTransfer', { recipients: [{ address: paymentAddress, amount: Number(amountSats) }] })
@@ -223,7 +224,7 @@ export const PaymentPage: React.FC = () => {
                 return
             }
 
-            setCompleted(true)
+            setPaymentMade(true)
         }
     }
 
@@ -363,7 +364,8 @@ export const PaymentPage: React.FC = () => {
                                         />
                                         {availableWallet && wallet && selectedPaymentTab != 'lightning' && (
                                             <div className="flex flex-col gap-2">
-                                                <Button onClick={payWithXVerse}>Pay {sendLoading && <Spinner />}</Button>
+                                                {!paymentMade && <Button onClick={payWithXVerse}>Pay {sendLoading && <Spinner />}</Button>}
+                                                {paymentMade && <p className="text-sm">Your payment is in process and will be completed once confirmed.</p>}
                                                 {sendError && <p className="text-primary text-sm">{sendError}</p>}
                                             </div>
                                         )}
