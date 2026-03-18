@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Receive } from "./receive"
-import { Send, type Asset } from "./send"
+import { BTCAsset, Send, type Asset } from "./send"
 import type { Addresses } from "@/hooks/use-wallet"
 import type { SparkPayment, Wallet } from "@/lib/wallet"
 import { AlertTriangleIcon, ExternalLink, MoreHorizontal, Wallet2 } from "lucide-react"
@@ -21,7 +21,7 @@ type Token = {
 
 type Props = {
     addresses: Addresses
-    btcBalance: number
+    satsBalance: number
     tokens: Token[]
     price: number
     currency: string
@@ -44,9 +44,9 @@ const chartConfig = {
     }
 } satisfies ChartConfig
 
-export const WalletCard: React.FC<Props> = ({ btcBalance, tokens, addresses, price, currency, onSend, payments, wallet, walletHistoryLoading }) => {
+export const WalletCard: React.FC<Props> = ({ satsBalance, tokens, addresses, price, currency, onSend, payments, wallet, walletHistoryLoading }) => {
     const assets: Asset[] = [
-        { name: "Bitcoin", symbol: "BTC", max: btcBalance },
+       { ...BTCAsset, max: satsBalance },
         ...tokens.map((t) => {
             return {
                 name: t.name,
@@ -107,10 +107,10 @@ export const WalletCard: React.FC<Props> = ({ btcBalance, tokens, addresses, pri
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
                 <div className="border-primary/40 flex flex-col gap-2">
-                    <span className="text-2xl font-semibold">{currencyFormat.format(btcBalance * price)}</span>
-                    <span className="text-xs text-muted-foreground">{btcBalance} BTC</span>
+                    <span className="text-2xl font-semibold">{currencyFormat.format((satsBalance / 100_000_000) * price)}</span>
+                    <span className="text-xs text-muted-foreground">{satsBalance} sat</span>
                 </div>
-                {btcBalance == 0 &&
+                {satsBalance == 0 &&
                     <Alert className="py-5">
                         <AlertTriangleIcon />
                         <AlertTitle>Adds funds to your wallet before emit payment requests</AlertTitle>

@@ -11,7 +11,7 @@ import { PaymentRequestForm, type PaymentRequestData } from "@/components/app/pa
 import { ReceiptTable, type Receipt } from "@/components/app/receipt-table"
 import { type SparkPayment, type TokenBalanceMap, type TokenMetadata, type TokenStats, type Wallet } from "@/lib/wallet"
 import { PaymentTable, type Payment } from "@/components/app/payment-table"
-import type { Asset } from "@/components/app/send"
+import { BTCAsset, type Asset } from "@/components/app/send"
 import { send } from "@/lib/utils"
 import type { ReceiptMetadataData } from "@/components/app/receipt-metadata-form"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -34,7 +34,7 @@ export const DashboardPage = () => {
     const hasSecuredMnemonic = localStorage.getItem('BITLASSO_SECURED_MNEMONIC') || 'false'
 
     const [tokenMetadataLoading, setTokenMetadataLoading] = useState(true)
-    const [btcBalance, setBtcBalance] = useState(0n)
+    const [satsBalance, setSatsBalance] = useState(0n)
     const [tokenBalances, setTokenBalances] = useState<TokenBalanceMap | undefined>(undefined)
     const [issuanceStats, setIssuanceStats] = useState<TokenStats | undefined>(undefined)
     const [tokenMetadata, setTokenMetadata] = useState<TokenMetadata | undefined>(undefined)
@@ -55,7 +55,7 @@ export const DashboardPage = () => {
 
     const updateBalance = async (wallet: Wallet) => {
         const balance = await wallet.getBalance()
-        setBtcBalance(balance.balance)
+        setSatsBalance(balance.balance)
 
         if (balance.tokenBalances.size > 0) {
             setTokenBalances(balance.tokenBalances)
@@ -302,10 +302,9 @@ export const DashboardPage = () => {
             return
         }
 
-        const asset = { name: "Bitcoin", symbol: "BTC", max: 0 }
         let txId: string
-        if (data.feeBTC) {
-            txId = await send(wallet, asset, data.feeBTC, settings.address, "spark")
+        if (data.feeSats) {
+            txId = await send(wallet, BTCAsset, data.feeSats, settings.address, "spark")
         }
         else {
             if (!tokenBalances) {
@@ -354,8 +353,7 @@ export const DashboardPage = () => {
 
         const requestSdk = await wallet.withAccountNumber(paymentRequest.nonce)
 
-        const asset = { name: "Bitcoin", symbol: "BTC", max: 0 }
-        await send(requestSdk, asset, paymentRequest.claimable, addresses.spark, 'spark')
+        await send(requestSdk, BTCAsset, paymentRequest.claimable, addresses.spark, 'spark')
         await refreshPaymentRequests()
     }
 
@@ -585,7 +583,7 @@ export const DashboardPage = () => {
                         {!walletLoading && wallet && addresses &&
                             <WalletCard
                                 addresses={addresses}
-                                btcBalance={Number(btcBalance) / (10 ** 8)}
+                                satsBalance={Number(satsBalance)}
                                 tokens={tokensData}
                                 price={price}
                                 currency={currency}
@@ -646,8 +644,8 @@ export const DashboardPage = () => {
                                 <p className="border-primary/40 flex gap-2 font-serif font-light text-2xl">Payment requests</p>
                                 {paymentRequestLoading && <Skeleton className="h-10 w-40" />}
                                 {!paymentRequestLoading && settings && <CardAction className='w-full lg:w-auto'>
-                                    {btcBalance > 0n && <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} onPurchaseCredits={handlePurchaseCredits} />}
-                                    {btcBalance == 0n && <Button className="flex gap-2 has-[>svg]:pr-5 bg-primary hover:bg-black w-full lg:w-auto" disabled><Plus className="h-4 w-4" />New payment request</Button>}
+                                    {satsBalance > 0n && <PaymentRequestForm settings={settings} onSubmit={handlePaymentRequest} price={price} creditBalance={creditBalance} onPurchaseCredits={handlePurchaseCredits} />}
+                                    {satsBalance == 0n && <Button className="flex gap-2 has-[>svg]:pr-5 bg-primary hover:bg-black w-full lg:w-auto" disabled><Plus className="h-4 w-4" />New payment request</Button>}
                                 </CardAction>}
                             </div>
                         </CardTitle>

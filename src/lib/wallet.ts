@@ -252,7 +252,7 @@ export class BreezSparkWallet extends TypedEventEmitter<BreezEvent> implements W
 
         instance.on('paymentReceived', (payment) => {
             if (payment.method != 'token') {
-                toast.success(`Received payment of ${Number(payment.amount) / 100_000_000} BTC`)
+                toast.success(`Received payment of ${Number(payment.amount)} sats`)
             }
         })
         instance.on('paymentPending', (payment) => {

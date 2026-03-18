@@ -1,4 +1,4 @@
-import type { Asset } from "@/components/app/send";
+import { BTCAsset, type Asset } from "@/components/app/send";
 import { bech32m } from "bech32";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -28,35 +28,42 @@ export function sparkBech32ToHex(bech32Id: string) {
 export const send = (wallet: Wallet, asset: Asset, amount: number, recipient: string, method: "spark" | "lightning" | "bitcoin") => {
   return new Promise<string>(async (resolve, reject) => {
     try {
-      console.log(`Sending ${amount} ${asset.symbol} to ${shortenAddress(recipient)}.`)
-      toast.info(`Sending ${amount} ${asset.symbol} to ${shortenAddress(recipient)}.`)
-
       wallet.on('paymentSent', (payment) => {
-        toast.success(`Sent ${amount} ${asset.symbol} to ${shortenAddress(recipient)}.`)
+        if (payment.details?.type == 'token') {
+          toast.success(`Sent ${Number(payment.amount) / (10 ** payment.details.metadata.decimals)} ${asset.symbol} to ${shortenAddress(recipient)}.`)
+        }
+        else {
+          toast.success(`Sent ${payment.amount} sats to ${shortenAddress(recipient)}.`)
+        }
         resolve(payment.id)
       })
       wallet.on('paymentPending', () => {
         toast.info(`Payment pending`)
       })
-      wallet.on('paymentFailed', () => {
-        console.log('Failure')
-        toast.error(`Failed to send ${amount} ${asset.symbol} to ${shortenAddress(recipient)}.`)
+      wallet.on('paymentFailed', (payment) => {
+        if (payment.details?.type == 'token') {
+          toast.error(`Failed to send ${Number(payment.amount) / (10 ** payment.details.metadata.decimals)} ${asset.symbol} to ${shortenAddress(recipient)}.`)
+        }
+        else {
+          toast.error(`Failed to send ${amount} sats to ${shortenAddress(recipient)}.`)
+        }
         reject()
       })
 
-      const satsAmount = Math.floor(amount * 100_000_000)
       switch (method) {
         case 'spark':
-          if (asset.symbol == 'BTC') {
-            const txId = await wallet.sendSparkPayment(recipient, satsAmount)
-            console.log('Spark payment sent with tx ID:', txId)
+          if (asset.symbol == BTCAsset.symbol) {
+            const { paymentId: sparkTxID } = await wallet.sendSparkPayment(recipient, amount)
+            console.log('Spark payment sent with tx ID:', sparkTxID)
+            resolve(sparkTxID)
           }
           else if (asset.identifier) {
             const tokenMetadata = await wallet.getTokenMetadata(asset.identifier as Bech32mTokenIdentifier)
             if (tokenMetadata) {
               const tokenAmount = BigInt(amount * (10 ** tokenMetadata.decimals))
-              const { paymentId } = await wallet.sendTokenTransfer(asset.identifier as Bech32mTokenIdentifier, tokenAmount, recipient)
-              resolve(paymentId)
+              const { paymentId: sparkTokenTxID } = await wallet.sendTokenTransfer(asset.identifier as Bech32mTokenIdentifier, tokenAmount, recipient)
+              console.log('Spark payment sent with tx ID:', sparkTokenTxID)
+              resolve(sparkTokenTxID)
             }
             else {
               toast.error(`Failed to send ${asset.name} tokens. Cannot find metadata`)
@@ -65,12 +72,14 @@ export const send = (wallet: Wallet, asset: Asset, amount: number, recipient: st
           }
           break;
         case 'lightning':
-          const { paymentId: lnPaymentId } = await wallet.sendLightningPayment(recipient, satsAmount)
-          resolve(lnPaymentId)
+          const { paymentId: LnPaymentID } = await wallet.sendLightningPayment(recipient, amount)
+          console.log('LN payment sent with tx ID:', LnPaymentID)
+          resolve(LnPaymentID)
           break;
         case 'bitcoin':
-          const { paymentId: btcPaymentId } = await wallet.sendOnChainPayment(recipient, satsAmount)
-          resolve(btcPaymentId)
+          const { paymentId: btcTxID } = await wallet.sendOnChainPayment(recipient, amount)
+          console.log('BTC payment sent with tx ID:', btcTxID)
+          resolve(btcTxID)
           break;
       }
     } catch (e) {

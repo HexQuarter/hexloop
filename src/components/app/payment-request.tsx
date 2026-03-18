@@ -21,7 +21,7 @@ import type { Settings } from "@/lib/api"
 export type PaymentRequestData = {
     description?: string
     amount: number
-    feeBTC?: number
+    feeSats?: number
     credits?: number
     discountRate: number
 }
@@ -62,13 +62,13 @@ export const PaymentRequestForm: React.FC<Props> = ({ onSubmit, price, settings,
         setDiscountRate(amount)
     }
 
-    const handleActivatePayment = async (feeBTC?: number, credits?: number) => {
+    const handleActivatePayment = async (feeSats?: number, credits?: number) => {
         try {
             setLoading(true)
             await onSubmit({
                 amount,
                 description,
-                feeBTC,
+                feeSats,
                 credits,
                 discountRate
             })

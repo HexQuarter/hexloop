@@ -28,7 +28,7 @@ type Props = {
     loading: boolean
     price: number
     creditBalance?: number
-    onSubmit(feeBtc?: number, credits?: number): void
+    onSubmit(feeSats?: number, credits?: number): void
     onPurchaseCredits: (amount: number) => Promise<void>
 }
 
@@ -42,8 +42,8 @@ export type Bundle = {
 
 const purchaseBundle = async (wallet: Wallet, price: number, bundle: Bundle, bitlassoAddress: string) => {
     const amount = bundle.priceEach * bundle.quantity
-    const btc = usdToBtc(amount, price)
-    const paymentId = await send(wallet, BTCAsset, btc, bitlassoAddress, 'spark')
+    const sats = usdToBtc(amount, price) * 100_000_000
+    const paymentId = await send(wallet, BTCAsset, sats, bitlassoAddress, 'spark')
     console.log(paymentId)
     const walletAddress = await wallet.getSparkAddress()
     const { transferId } = await purchaseCredits(paymentId, bundle.quantity, walletAddress)
@@ -52,7 +52,7 @@ const purchaseBundle = async (wallet: Wallet, price: number, bundle: Bundle, bit
 
 export const ActivePayment: React.FC<Props> = ({ settings, loading, price, onSubmit, onPurchaseCredits, creditBalance = 0 }) => {
     const { wallet } = useWallet()
-    const singleFeeBtc = useMemo(() => usdToBtc(USD_FEE, price), [price])
+    const singleFeeSats = useMemo(() => usdToBtc(USD_FEE, price) * 100_000_000, [price])
     const [view, setView] = useState("activate"); // "activate" | "buy"
     const [selectedBundle, setSelectedBundle] = useState<Bundle | undefined>(undefined);
     const [processing, setProcessing] = useState(false);
@@ -85,7 +85,7 @@ export const ActivePayment: React.FC<Props> = ({ settings, loading, price, onSub
 
     const handleActivate = () => {
         if (balance == 0) {
-            onSubmit(singleFeeBtc)
+            onSubmit(singleFeeSats)
         }
         else {
             onSubmit(undefined, 1)

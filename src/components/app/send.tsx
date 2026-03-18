@@ -19,7 +19,7 @@ export type Asset = {
     identifier?: string
 }
 
-export const BTCAsset = { name: "Bitcoin", symbol: "BTC" } as Asset
+export const BTCAsset = { name: "Bitcoin", symbol: "sat", max: 0 } as Asset
 
 type Props = {
     assets: Asset[]
@@ -63,22 +63,22 @@ export const Send: React.FC<Props> = ({ wallet, assets, price, onSend }) => {
                 setLoadingFee(true)
                 switch (method) {
                     case "spark":
-                        if (selectedAsset.symbol == "BTC") {
-                            const feeSats = await wallet.getTransferFee("spark", recipient, amount * 100_000_000)
-                            setFee((Number(feeSats) / 100_000_000))
+                        if (selectedAsset.symbol == "sat") {
+                            const feeSats = await wallet.getTransferFee("spark", recipient, amount)
+                            setFee(Number(feeSats))
                         }
                         else {
-                            const feeSats = await wallet.getTransferFee("token", recipient, amount * 100_000_000, selectedAsset.identifier)
-                            setFee((Number(feeSats) / 100_000_000))
+                            const feeSats = await wallet.getTransferFee("token", recipient, amount, selectedAsset.identifier)
+                            setFee(Number(feeSats))
                         }
                         break
                     case "bitcoin":
-                        const btcFeeSats = await wallet.getTransferFee("bitcoin", recipient, amount * 100_000_000)
-                        setFee((Number(btcFeeSats) / 100_000_000))
+                        const btcFeeSats = await wallet.getTransferFee("bitcoin", recipient, amount)
+                        setFee(Number(btcFeeSats))
                         break
                     case "lightning":
-                        const lnFeeSats = await wallet.getTransferFee("lightning", recipient, amount * 100_000_000)
-                        setFee((Number(lnFeeSats) / 100_000_000))
+                        const lnFeeSats = await wallet.getTransferFee("lightning", recipient, amount)
+                        setFee(Number(lnFeeSats))
                         break
                 }
 
@@ -204,16 +204,16 @@ export const Send: React.FC<Props> = ({ wallet, assets, price, onSend }) => {
                                         <Input required id="amount" type='number' inputMode="numeric" min={0} onChange={(e) => handleChangeAmount(e.target.value)} placeholder="0" value={amount} />
                                         <div className="flex md:flex-row flex-col gap-1 justify-between md:items-center">
                                             <div>
-                                                {selectedAsset.symbol == 'BTC' && <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(amount * price)}</span>}
+                                                {selectedAsset.symbol == 'sat' && <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((amount / 100_000_000) * price)}</span>}
                                             </div>
                                             <div className="flex gap-1 items-center">
                                                 {amount != selectedAsset.max && <Badge className="bg-gray-100 text-gray-400 border-gray-200 font-light pl-2 pr-2 hover:cursor-pointer hover:bg-gray-200 hover:text-gray-500" onClick={() => setMaxAmount()}>Max</Badge>}
-                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} {selectedAsset.symbol == 'BTC' && <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(selectedAsset.max * price)})</span>}</span>
+                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} {selectedAsset.symbol == 'BTC' && <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((selectedAsset.max / 100_000_000) * price)})</span>}</span>
                                             </div>
                                         </div>
                                         {amount > selectedAsset.max && <span className="items-center flex text-xs text-primary font-semibold">Insufficient funds. <br />The amount entered is greater than your balance ({selectedAsset.max} {selectedAsset.symbol})</span>}
                                         {loadingFee && <span className="text-xs flex items-center gap-2">Estimated fee: <Spinner /></span>}
-                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(fee * price)}</span>}
+                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {fee} sat ({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((fee / 100_000_000) * price)})</span>}
                                     </div>
                                 </div>
                             </div>
@@ -233,16 +233,16 @@ export const Send: React.FC<Props> = ({ wallet, assets, price, onSend }) => {
                                         <Input required id="amount" type='number' inputMode="numeric" min={0} onChange={(e) => handleChangeAmount(e.target.value)} placeholder="0" value={amount} />
                                         <div className="flex md:flex-row flex-col gap-1 justify-between md:items-center">
                                             <div>
-                                                <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(amount * price)}</span>
+                                                <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((amount / 100_000_000) * price)}</span>
                                             </div>
                                             <div className="flex gap-1 items-center">
                                                 {amount != selectedAsset.max && <Badge className="bg-gray-100 text-gray-400 border-gray-200 font-light pl-2 pr-2 hover:cursor-pointer hover:bg-gray-200 hover:text-gray-500" onClick={() => setMaxAmount()}>Max</Badge>}
-                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(selectedAsset.max * price)})</span></span>
+                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((selectedAsset.max / 100_000_000)* price)})</span></span>
                                             </div>
                                         </div>
                                         {amount > selectedAsset.max && <span className="items-center flex text-xs text-primary font-semibold">Insufficient funds. <br />The amount entered is greater than your balance ({selectedAsset.max} {selectedAsset.symbol})</span>}
                                         {loadingFee && <span className="text-xs flex items-center gap-2">Estimated fee: <Spinner /></span>}
-                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(fee * price)}</span>}
+                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {fee} sat ({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((fee / 100_000_000) * price)})</span>}
                                     </div>
                                 </div>
                             </div>
@@ -262,16 +262,16 @@ export const Send: React.FC<Props> = ({ wallet, assets, price, onSend }) => {
                                         <Input required id="amount" type='number' inputMode="numeric" min={0} onChange={(e) => handleChangeAmount(e.target.value)} placeholder="0" value={amount} />
                                         <div className="flex md:flex-row flex-col gap-1 justify-between md:items-center">
                                             <div>
-                                                <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(amount * price)}</span>
+                                                <span className="text-xs">Sending: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((amount / 100_000_000) * price)}</span>
                                             </div>
                                             <div className="flex gap-1 items-center">
                                                 {amount != selectedAsset.max && <Badge className="bg-gray-100 text-gray-400 border-gray-200 font-light pl-2 pr-2 hover:cursor-pointer hover:bg-gray-200 hover:text-gray-500" onClick={() => setMaxAmount()}>Max</Badge>}
-                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(selectedAsset.max * price)})</span></span>
+                                                <span className="text-xs">{selectedAsset.max} {selectedAsset.symbol} <span>({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((selectedAsset.max / 100_000_000) * price)})</span></span>
                                             </div>
                                         </div>
                                         {amount > selectedAsset.max && <span className="items-center flex text-xs text-primary font-semibold">Insufficient funds. <br />The amount entered is greater than your balance ({selectedAsset.max} {selectedAsset.symbol})</span>}
                                         {loadingFee && <span className="text-xs flex items-center gap-2">Estimated fee: <Spinner /></span>}
-                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format(fee * price)}</span>}
+                                        {!loadingFee && fee !== undefined && <span className="text-xs">Estimated fee: {fee} sat ({new Intl.NumberFormat(navigator.language || "en-US", { style: 'currency', currency: 'USD' }).format((fee / 100_000_000) * price)})</span>}
                                     </div>
                                 </div>
                             </div>
