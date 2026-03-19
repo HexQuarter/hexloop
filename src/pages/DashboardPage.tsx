@@ -470,7 +470,7 @@ export const DashboardPage = () => {
         <div className="flex flex-col w-full gap-10">
             <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-2 justify-between">
-                    <h1 className="text-4xl font-serif font-normal text-foreground flex md:items-center justify-between md:flex-row flex-col">Dashboard {tokenMetadataLoading && <p className="text-xs flex items-center font-mono uppercase text-primary"><span>Retrieveing token metadata...</span> <Spinner className="ml-2 text-primary" /></p>}</h1>
+                    <h1 className="text-4xl font-serif font-normal text-foreground flex md:items-center justify-between md:flex-row flex-col">Dashboard {tokenMetadataLoading && <p className="text-xs flex items-center font-mono uppercase text-primary"><span>Syncing wallet data...</span> <Spinner className="ml-2 text-primary" /></p>}</h1>
                     <h2 className="text-1xl font-light text-muted-foreground">Turn paid work into Bitcoin-anchored receipts that reward repeat clients.</h2>
                 </div>
                 {hasSecuredMnemonic == 'false' && <Alert className="py-5">
