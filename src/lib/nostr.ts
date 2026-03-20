@@ -14,7 +14,7 @@ const pool = new SimplePool({
     enableReconnect: true
 });
 
-const BACKEND_RELAY = "ws://localhost:3000/nostr"
+const BACKEND_RELAY = import.meta.env.DEV ? "ws://localhost:3000/nostr" : "wss://api.bitlasso.xyz/nostr"
 const BACKUP_RELAIS = [
     "wss://relay.damus.io",
     "wss://relay.primal.net",
