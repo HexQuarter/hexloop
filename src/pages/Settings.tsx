@@ -102,7 +102,7 @@ export const SettingsPage = () => {
                             <h1 className="text-4xl font-serif font-normal text-foreground flex items-center gap-2">Settings {initializing && <Spinner className="text-primary" />}</h1>
                             <h2 className="text-1xl font-light text-muted-foreground">Configure your workspace.</h2>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-10">
                             <Card className="">
                                 <CardHeader className="font-mono uppercase tracking-wider text-gray-500 text-xs flex justify-between items-center">
                                     <div className="flex items-center gap-2">
