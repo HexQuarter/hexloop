@@ -1,5 +1,5 @@
 import type { NotificationSettings } from "@/components/app/notification-setting";
-import { SimplePool, getPublicKey, type VerifiedEvent } from "nostr-tools"
+import { SimplePool, getPublicKey, type Filter, type Event } from "nostr-tools"
 
 import { HDKey } from "@scure/bip32";
 import { bech32 } from "bech32";
@@ -13,21 +13,20 @@ const pool = new SimplePool({
     enablePing: true,
     enableReconnect: true
 });
-const RELAYS = [
+
+const BACKEND_RELAY = "ws://localhost:3000/nostr"
+const BACKUP_RELAIS = [
     "wss://relay.damus.io",
     "wss://relay.primal.net",
     "wss://nos.lol"
 ];
+const RELAYS = [BACKEND_RELAY, ...BACKUP_RELAIS]
 
 export type NostrKeyPair = {
     pub: string
     priv: string
     npub: string
     nsec: string
-}
-
-export const publishEvent = async (signedEvent: VerifiedEvent) => {
-    await pool.publish(RELAYS, signedEvent)
 }
 
 export const getNostrKeyPair = (mnemonic: string): NostrKeyPair => {
@@ -50,6 +49,79 @@ export const getNostrKeyPair = (mnemonic: string): NostrKeyPair => {
     }
 }
 
+const fetchAndSync = async (filter: Filter) => {
+    // Query each relay individually to know which has what
+    const results = await Promise.all(
+        RELAYS.map(async relay => ({
+            relay,
+            events: await pool.querySync([relay], filter).catch(() => [] as Event[]),
+        }))
+    );
+
+    // Collect all unique events across all relays
+    const allIds = new Set<string>();
+    const merged: Event[] = [];
+    for (const { events } of results) {
+        for (const e of events) {
+            if (!allIds.has(e.id)) {
+                allIds.add(e.id);
+                merged.push(e);
+            }
+        }
+    }
+
+    if (merged.length === 0) return [];
+
+    // For each relay, push events it's missing
+    await Promise.allSettled(
+        results.map(({ relay, events }) => {
+            const relayIds = new Set(events.map(e => e.id));
+            const missing = merged.filter(e => !relayIds.has(e.id));
+
+            if (missing.length === 0) return Promise.resolve();
+
+            console.log(`pushing ${missing.length} missing events to ${relay}`);
+            return Promise.allSettled(
+                missing.map(e => pool.publish([relay], e))
+            );
+        })
+    );
+
+    return merged;
+}
+
+const subscribeAndSync = (
+    filter: Filter,
+    onEvent: (event: Event) => void,
+): { close: () => void } => {
+    // Track which events each relay has seen
+    const relaysSeen = new Map<string, Set<string>>(
+        RELAYS.map(r => [r, new Set()])
+    );
+    const subs = RELAYS.map(relay => {
+        return pool.subscribeMany([relay], filter, {
+            onevent(event) {
+                // Mark this relay as having the event
+                relaysSeen.get(relay)!.add(event.id);
+
+                // Deliver to caller
+                onEvent(event);
+
+                // Push to every relay that doesn't have it yet
+                for (const r of RELAYS) {
+                    if (!relaysSeen.get(r)!.has(event.id)) {
+                        pool.publish([r], event)
+                    }
+                }
+            },
+        });
+    });
+
+    return {
+        close: () => subs.forEach(sub => sub.close()),
+    };
+}
+
 export const registerNotifSettings = async (wallet: Wallet, notifSettings: NotificationSettings) => {
     const event = {
         kind: 30078,
@@ -64,7 +136,7 @@ export const registerNotifSettings = async (wallet: Wallet, notifSettings: Notif
 }
 
 export const getNotifSettings = async (wallet: Wallet): Promise<NotificationSettings | undefined> => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         authors: [wallet.getNostrPublicKey()],
         "#d": ["bitlasso/settings"]
@@ -77,7 +149,7 @@ export const getNotifSettings = async (wallet: Wallet): Promise<NotificationSett
 }
 
 export const fetchPaymentsRequest = async (wallet: Wallet): Promise<Payment[]> => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         "#t": ["bitlasso/req"],
         "#p": [wallet.getNostrPublicKey()]
@@ -115,7 +187,7 @@ export const fetchPaymentsRequest = async (wallet: Wallet): Promise<Payment[]> =
 }
 
 export const fetchPaymentRequest = async (id: string): Promise<PaymentRequest> => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         ids: [id],
         authors: [import.meta.env.VITE_API_NOSTR_PUB]
@@ -147,7 +219,7 @@ export const fetchPaymentRequest = async (id: string): Promise<PaymentRequest> =
 }
 
 const fetchPaymentDetails = async (requestId: string) => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         authors: [import.meta.env.VITE_API_NOSTR_PUB],
         "#d": [`bitlasso/payment/${requestId}`]
@@ -166,7 +238,7 @@ const fetchPaymentDetails = async (requestId: string) => {
 }
 
 const fetchRedeemDetails = async (requestId: string) => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         authors: [import.meta.env.VITE_API_NOSTR_PUB],
         "#d": [`bitlasso/redeem/${requestId}`],
@@ -247,7 +319,7 @@ export const listReceipts = async (wallet: Wallet): Promise<Receipt[]> => {
 }
 
 export const getBitcoinPrice = async (id: string): Promise<{ usdPrice: number, date: Date } | undefined> => {
-    const events = await pool.querySync(RELAYS, {
+    const events = await fetchAndSync({
         kinds: [30078],
         authors: [import.meta.env.VITE_API_NOSTR_PUB],
         '#d': [`bitlasso/btc-price/${id}`]
@@ -265,27 +337,23 @@ const getTagByMarker = (tags: string[][], name: string, marker: string) =>
     tags.find(t => t[0] === name && t[3] === marker)?.[1]
 
 export const subscribeRedeem = (id: string, callback: (redeemAmount: number, redeemTransaction: string) => void) => {
-    pool.subscribe(RELAYS, {
+    subscribeAndSync({
         kinds: [30078],
         authors: [import.meta.env.VITE_API_NOSTR_PUB],
         "#d": [`bitlasso/redeem/${id}`]
-    }, {
-        onevent(evt): void {
-            const { redeemAmount, redeemTransaction } = JSON.parse(evt.content)
-            callback(redeemAmount, redeemTransaction)
-        }
+    }, (evt) => {
+        const { redeemAmount, redeemTransaction } = JSON.parse(evt.content)
+        callback(redeemAmount, redeemTransaction)
     })
 }
 
-export const subscribePayment = (requestId: string, callback: (transaction: string, settlementMode: string) => void ) => {
-     pool.subscribe(RELAYS, {
+export const subscribePayment = (requestId: string, callback: (transaction: string, settlementMode: string) => void) => {
+    subscribeAndSync({
         kinds: [30078],
         authors: [import.meta.env.VITE_API_NOSTR_PUB],
         "#d": [`bitlasso/payment/${requestId}`]
-    }, {
-        onevent(evt): void {
-            const { settlementMode, transaction } = JSON.parse(evt.content)
-            callback(transaction, settlementMode)
-        }
+    }, (evt) => {
+        const { settlementMode, transaction } = JSON.parse(evt.content)
+        callback(transaction, settlementMode)
     })
 }
